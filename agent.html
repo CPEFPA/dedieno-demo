@@ -1,39 +1,79 @@
-﻿<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/><title>Agent Dedienɔ</title><style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:system-ui;background:#0f172a;color:#fff;display:flex;align-items:center;justify-content:center;min-height:100vh;padding:20px}.card{background:#1e293b;padding:20px;border-radius:16px;max-width:380px;width:100%;text-align:center}input,select{width:100%;padding:12px;margin:8px 0;border-radius:8px;border:1px solid #334155;background:#0f172a;color:#fff}.btn{width:100%;padding:14px;margin:10px 0;border:none;border-radius:10px;font-weight:600;cursor:pointer;font-size:15px}.green{background:#22c55e;color:#fff}.red{background:#ef4444;color:#fff;animation:p 2s infinite}@keyframes p{0%,100%{transform:scale(1)}50%{transform:scale(1.02)}}.st{margin-top:14px;font-size:13px;color:#94a3b8}.cd{font-family:monospace;font-size:11px;color:#64748b;margin-top:8px}</style></head><body><div class="card"><h2>👮‍♂️ Agent</h2><input id="n" placeholder="Votre nom"/><select id="s"><option value="Lomé-Centre">Lomé-Centre</option><option value="Agoè-Nyivé">Agoè-Nyivé</option><option value="Bè-Kpota">Bè-Kpota</option></select><button class="btn green" id="sb">📍 Démarrer GPS</button><button class="btn red" id="sosb" style="display:none">🚨 SOS</button><div class="st" id="st">En attente...</div><div class="cd" id="cd"></div></div><script type="module">
+﻿<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/><title>Agent Dedienɔ</title><style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:system-ui;background:#0f172a;color:#fff;display:flex;align-items:center;justify-content:center;min-height:100vh;padding:20px}.card{background:#1e293b;padding:24px;border-radius:16px;max-width:400px;width:100%;text-align:center}.input-group{margin:12px 0;text-align:left}label{display:block;font-size:13px;color:#94a3b8;margin-bottom:4px}input,select{width:100%;padding:12px;border-radius:8px;border:1px solid #334155;background:#0f172a;color:#fff;font-size:15px}.btn{width:100%;padding:14px;margin:10px 0;border:none;border-radius:10px;font-weight:600;cursor:pointer;font-size:15px;transition:opacity 0.2s}.btn:disabled{opacity:0.6;cursor:not-allowed}.green{background:#22c55e;color:#fff}.red{background:#ef4444;color:#fff;animation:pulse 2s infinite}@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.02)}}.status{margin-top:16px;padding:12px;border-radius:10px;background:#0f172a;font-size:14px;min-height:44px;display:flex;align-items:center;justify-content:center}.status.ok{color:#22c55e}.status.err{color:#ef4444}.coords{font-family:monospace;font-size:12px;color:#64748b;margin-top:8px}.confirm{background:#334155;padding:16px;border-radius:12px;margin:12px 0;display:none}.confirm.active{display:block}.confirm-btn{background:#3b82f6;color:#fff;padding:8px 16px;border:none;border-radius:6px;cursor:pointer;margin:4px}</style></head><body><div class="card"><h2>👮‍♂️ Agent Dedienɔ</h2><div class="input-group"><label>Votre nom *</label><input id="n" placeholder="Ex: Agent Kossi" maxlength="50"/></div><div class="input-group"><label>Site d'affectation *</label><select id="s"><option value="">-- Choisir --</option><option value="Lomé-Centre">🏢 Lomé-Centre</option><option value="Agoè-Nyivé">🏘️ Agoè-Nyivé</option><option value="Bè-Kpota">🏭 Bè-Kpota</option></select></div><button class="btn green" id="sb">📍 Démarrer le pointage GPS</button><div class="confirm" id="confirm"><p style="margin:0 0 12px;font-size:14px">🔍 Vérifie tes informations :</p><p id="confirm-text" style="margin:0 0 12px;font-weight:600"></p><button class="confirm-btn" id="confirm-yes">✅ Confirmer et démarrer</button><button class="confirm-btn" style="background:#64748b" id="confirm-no">✏️ Modifier</button></div><button class="btn red" id="sosb" style="display:none">🚨 ENVOYER ALERTE SOS</button><div class="status" id="st">En attente...</div><div class="coords" id="cd"></div></div><script type="module">
 import{db,ref,set,push}from'./js/firebase-config.js';
 let id=null,run=false,nom='',site='';
-const sb=document.getElementById('sb'),sosb=document.getElementById('sosb'),st=document.getElementById('st'),cd=document.getElementById('cd');
+const sb=document.getElementById('sb'),sosb=document.getElementById('sosb'),st=document.getElementById('st'),cd=document.getElementById('cd'),confirmBox=document.getElementById('confirm'),confirmText=document.getElementById('confirm-text'),confirmYes=document.getElementById('confirm-yes'),confirmNo=document.getElementById('confirm-no');
 
-sb.onclick=async()=>{
+// Étape 1 : Prévisualisation avant envoi
+sb.onclick=()=>{
   nom=document.getElementById('n').value.trim();
   site=document.getElementById('s').value;
-  if(!nom)return alert('Entrez votre nom !');
-  id='ag_'+Math.random().toString(36).substr(2,9);
+  if(!nom){st.textContent='❌ Entrez votre nom';st.className='status err';return;}
+  if(!site){st.textContent='❌ Sélectionnez un site';st.className='status err';return;}
+  // Afficher la confirmation
+  confirmText.textContent=`👤 ${nom} • 📍 ${site}`;
+  confirmBox.classList.add('active');
+  sb.disabled=true;
+  st.textContent='🔍 Vérifie avant de continuer...';st.className='status';
+};
+
+// Annuler la confirmation
+confirmNo.onclick=()=>{
+  confirmBox.classList.remove('active');
+  sb.disabled=false;
+  st.textContent='En attente...';st.className='status';
+};
+
+// Étape 2 : Confirmation → Envoi Firebase
+confirmYes.onclick=async()=>{
+  confirmBox.classList.remove('active');
+  st.textContent='📡 Connexion à Firebase...';st.className='status';
   try{
+    id='ag_'+Math.random().toString(36).substr(2,9);
+    console.log('📤 Envoi agent:',{id,name:nom,site});
     await set(ref(db,`agents/${id}`),{name:nom,site,status:'online',lastPing:Date.now()});
-    sb.style.display='none';sosb.style.display='block';st.textContent='✅ Connecté & GPS actif';
+    console.log('✅ Agent enregistré dans Firebase');
+    // UI update
+    document.getElementById('n').disabled=true;
+    document.getElementById('s').disabled=true;
+    sosb.style.display='block';
+    st.textContent='✅ Connecté & GPS actif';st.className='status ok';
     run=true;
+    // Boucle GPS
     const int=setInterval(async()=>{
       if(!run)return clearInterval(int);
       let la,lo;
-      if(navigator.geolocation){try{const p=await new Promise((a,b)=>navigator.geolocation.getCurrentPosition(a,b,{enableHighAccuracy:true,timeout:8000}));la=p.coords.latitude;lo=p.coords.longitude}catch{la=6.1256+(Math.random()-.5)*.02;lo=1.2244+(Math.random()-.5)*.02}}
-      else{la=6.1256+(Math.random()-.5)*.02;lo=1.2244+(Math.random()-.5)*.02}
+      if(navigator.geolocation){
+        try{
+          const p=await new Promise((a,b)=>navigator.geolocation.getCurrentPosition(a,b,{enableHighAccuracy:true,timeout:8000}));
+          la=p.coords.latitude;lo=p.coords.longitude;
+        }catch{la=6.1256+(Math.random()-.5)*.02;lo=1.2244+(Math.random()-.5)*.02}
+      }else{la=6.1256+(Math.random()-.5)*.02;lo=1.2244+(Math.random()-.5)*.02}
       await set(ref(db,`agents/${id}`),{name:nom,site,status:'online',lat:la,lng:lo,lastPing:Date.now()});
       cd.textContent=`📍 ${la.toFixed(5)}, ${lo.toFixed(5)}`;
+      console.log('🛰️ GPS ping:',la.toFixed(4),lo.toFixed(4));
     },10000);
     window.addEventListener('beforeunload',()=>{run=false;clearInterval(int);if(id)set(ref(db,`agents/${id}/status`),'offline').catch(()=>{})});
-  }catch(e){console.error(e);st.textContent='❌ Erreur connexion'}
+  }catch(e){
+    console.error('❌ Erreur Firebase:',e);
+    st.textContent='❌ Échec connexion: '+e.message;st.className='status err';
+    sb.disabled=false;
+  }
 };
 
+// SOS
 sosb.onclick=async()=>{
-  console.log('🔴 Bouton SOS cliqué');
-  if(!id)return alert('⚠️ Cliquez d\'abord sur "Démarrer GPS"');
+  if(!id)return alert('⚠️ Activez d\'abord le GPS');
+  if(!confirm('🚨 Confirmer l\'envoi de l\'alerte SOS ?'))return;
   try{
-    console.log('📡 Envoi SOS à Firebase...');
-    const alertRef=push(ref(db,'alerts'));
-    await set(alertRef,{id:alertRef.key,agentId:id,agentName:nom,site,timestamp:Date.now(),played:false});
-    console.log('✅ SOS envoyé !');
-    st.textContent='🚨 ALERTE SOS ENVOYÉE !';st.style.color='#ef4444';
-    setTimeout(()=>{st.textContent='✅ GPS actif';st.style.color='#94a3b8'},3000);
-  }catch(e){console.error('❌ Erreur SOS:',e);alert('Erreur: '+e.message)}
+    console.log('🚨 Envoi SOS...');
+    await push(ref(db,'alerts'),{id:'s_'+Date.now(),agentId:id,agentName:nom,site,timestamp:Date.now(),played:false});
+    console.log('✅ SOS envoyé');
+    st.textContent='🚨 ALERTE SOS ENVOYÉE !';st.className='status err';
+    sosb.disabled=true;
+    setTimeout(()=>{if(run){st.textContent='✅ GPS actif';st.className='status ok';sosb.disabled=false;}},30000);
+  }catch(e){
+    console.error('❌ Erreur SOS:',e);
+    alert('Erreur: '+e.message);
+  }
 };
 </script></body></html>
