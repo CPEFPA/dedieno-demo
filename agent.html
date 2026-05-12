@@ -39,26 +39,52 @@ confirmYes.onclick=async()=>{
     st.textContent='✅ Connecté & GPS actif';st.className='status ok';
     run=true;
     // Boucle GPS
-    const int=setInterval(async()=>{
-      if(!run)return clearInterval(int);
-      let la,lo;
-      if(navigator.geolocation){
-        try{
-          const p=await new Promise((a,b)=>navigator.geolocation.getCurrentPosition(a,b,{enableHighAccuracy:true,timeout:8000}));
-          la=p.coords.latitude;lo=p.coords.longitude;
-        }catch{la=6.1256+(Math.random()-.5)*.02;lo=1.2244+(Math.random()-.5)*.02}
-      }else{la=6.1256+(Math.random()-.5)*.02;lo=1.2244+(Math.random()-.5)*.02}
-      await set(ref(db,`agents/${id}`),{name:nom,site,status:'online',lat:la,lng:lo,lastPing:Date.now()});
-      cd.textContent=`📍 ${la.toFixed(5)}, ${lo.toFixed(5)}`;
-      console.log('🛰️ GPS ping:',la.toFixed(4),lo.toFixed(4));
-    },10000);
-    window.addEventListener('beforeunload',()=>{run=false;clearInterval(int);if(id)set(ref(db,`agents/${id}/status`),'offline').catch(()=>{})});
-  }catch(e){
-    console.error('❌ Erreur Firebase:',e);
-    st.textContent='❌ Échec connexion: '+e.message;st.className='status err';
-    sb.disabled=false;
+    // 🛰️ Boucle GPS haute précision
+const int = setInterval(async () => {
+  if(!run) return clearInterval(int);
+  
+  let la, lo, acc = null;
+  
+  if(navigator.geolocation){
+    try{
+      // Options pour précision MAX + économie batterie
+      const pos = await new Promise((resolve, reject) => {
+        navigator.geolocation.getCurrentPosition(
+          resolve,
+          (err) => {
+            console.warn('⚠️ GPS erreur:', err.message);
+            reject(err);
+          },
+          {
+            enableHighAccuracy: true,  // ← GPS réel, pas réseau
+            timeout: 10000,            // 10s max d'attente
+            maximumAge: 0              // ← Toujours fresh, pas de cache
+          }
+        );
+      });
+      la = pos.coords.latitude;
+      lo = pos.coords.longitude;
+      acc = pos.coords.accuracy;  // Précision en mètres
+      console.log(`🎯 GPS précis: ${la.toFixed(6)}, ${lo.toFixed(6)} ±${Math.round(acc)}m`);
+    }catch{
+      // Fallback UNIQUEMENT si GPS échoue après 10s
+      console.warn('⚠️ Fallback: coordonnées simulées');
+      la = 6.1256 + (Math.random()-.5)*.001;  // ±50m max
+      lo = 1.2244 + (Math.random()-.5)*.001;
+    }
   }
-};
+  
+  // Envoi à Firebase
+  await set(ref(db, `agents/${id}`), {
+    name: nom, site, status: 'online',
+    lat: la, lng: lo, accuracy: acc,
+    lastPing: Date.now()
+  });
+  
+  // Affichage local
+  cd.textContent = `📍 ${la.toFixed(6)}, ${lo.toFixed(6)}${acc ? ` ±${Math.round(acc)}m` : ''}`;
+  
+}, 15000);  // Ping toutes les 15s (équilibre précision/batterie)
 
 // SOS
 sosb.onclick=async()=>{
