@@ -1,37 +1,67 @@
-﻿<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/><title>Dedienɔ Dashboard</title><link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/><style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:system-ui;background:#f1f5f9;display:grid;grid-template-columns:280px 1fr;min-height:100vh}aside{background:#fff;padding:12px;border-right:1px solid #e2e8f0;overflow-y:auto;display:flex;flex-direction:column}#map{height:100vh}.card{padding:10px;margin:6px 0;border-radius:6px;background:#fff;border:1px solid #e2e8f0}.online{border-left:4px solid #22c55e}.offline{border-left:4px solid #94a3b8;opacity:.7}.sos{background:#fef2f2;border:1px solid #fecaca;padding:10px;margin:6px 0;border-radius:6px;animation:pulse 2s infinite}@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.7}}.debug{padding:8px;margin:8px 0;border-radius:6px;font-size:12px;font-family:monospace}.debug.ok{background:#dcfce7;color:#166534}.debug.err{background:#fee2e2;color:#991b1b}.debug.info{background:#dbeafe;color:#1e40af}@media(max-width:768px){body{grid-template-columns:1fr}aside{max-height:40vh}}</style></head><body><aside><h3>👥 Agents (<span id="cnt">0</span>)</h3><div id="debug"></div><div id="list"></div><h3 style="margin-top:16px">🚨 SOS</h3><div id="sos"></div></aside><main><div id="map"></div></main><script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script><script type="module">
+﻿<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/><title>Dedienɔ Dashboard</title><link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/><style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:system-ui;background:#f1f5f9;display:grid;grid-template-columns:280px 1fr;min-height:100vh}aside{background:#fff;padding:12px;border-right:1px solid #e2e8f0;overflow-y:auto;display:flex;flex-direction:column}#map{height:100vh}.card{padding:10px;margin:6px 0;border-radius:6px;background:#fff;border:1px solid #e2e8f0}.online{border-left:4px solid #22c55e}.offline{border-left:4px solid #94a3b8;opacity:.7}.sos{background:#fef2f2;border:1px solid #fecaca;padding:10px;margin:6px 0;border-radius:6px}.debug{padding:8px;margin:8px 0;border-radius:6px;font-size:11px;font-family:monospace;max-height:150px;overflow-y:auto}.debug.ok{background:#dcfce7;color:#166534}.debug.err{background:#fee2e2;color:#991b1b}.refresh{padding:8px 16px;background:#3b82f6;color:#fff;border:none;border-radius:6px;cursor:pointer;margin:8px 0;font-size:13px}.refresh:hover{background:#2563eb}@media(max-width:768px){body{grid-template-columns:1fr}aside{max-height:40vh}}</style></head><body><aside><h3>👥 Agents (<span id="cnt">0</span>)</h3><button class="refresh" onclick="forceRefresh()">🔄 Actualiser</button><div id="debug"></div><div id="list"></div><h3 style="margin-top:16px">🚨 SOS</h3><div id="sos"></div></aside><main><div id="map"></div></main><script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script><script type="module">
 import{db,ref,onValue}from'./js/firebase-config.js';
 const debug=document.getElementById('debug');
-function log(msg,type='info'){debug.innerHTML+=`<div class="debug ${type}">[${new Date().toLocaleTimeString()}] ${msg}</div>`;debug.scrollTop=debug.scrollHeight;}
-log('🔌 Initialisation dashboard...');
+function log(m,t='info'){debug.innerHTML+=`<div class="debug ${t}">[${new Date().toLocaleTimeString()}] ${m}</div>`;debug.scrollTop=debug.scrollHeight;}
+log('🔌 Init...');
 const map=L.map('map').setView([6.1256,1.2244],13);
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OSM'}).addTo(map);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19}).addTo(map);
 const mkrs={},agentsRef=ref(db,'agents'),alertsRef=ref(db,'alerts');
-log('📡 Écoute agents sur: '+agentsRef.toString());
+const dbUrl='https://dedieno-demo-default-rtdb.europe-west1.firebasedatabase.app';
+let dataReceived=false;
+
+// Écoute temps réel
 onValue(agentsRef,{
   next:(snap)=>{
-    log('✅ Données reçues: '+JSON.stringify(snap.val()||{}).substring(0,100)+'...','ok');
-    const d=snap.val()||{};
-    document.getElementById('cnt').textContent=Object.keys(d).length;
-    const list=document.getElementById('list');list.innerHTML='';
-    if(Object.keys(d).length===0){list.innerHTML='<div style="color:#64748b;font-size:13px;padding:8px">🟡 Aucun agent en ligne</div>';return;}
-    Object.entries(d).forEach(([id,a])=>{
-      const c=document.createElement('div');c.className=`card ${a.status||'offline'}`;
-      c.innerHTML=`<b>${a.name||'?'}</b> <span style="color:${a.status==='online'?'#22c55e':'#94a3b8'}">● ${a.status||'off'}</span><br><small>📍 ${a.site||''}</small><br><small>🕐 ${a.lastPing?new Date(a.lastPing).toLocaleTimeString('fr-FR'):''}</small>`;
-      list.appendChild(c);
-      if(a.lat&&a.lng){
-        const col=a.status==='online'?'#22c55e':'#94a3b8';
-        if(!mkrs[id]){mkrs[id]=L.marker([a.lat,a.lng],{icon:L.divIcon({className:'c',html:`<div style="background:${col};width:12px;height:12px;border-radius:50%;border:2px solid #fff"></div>`,iconSize:[16,16]})}).addTo(map).bindPopup(`<b>${a.name||'Agent'}</b><br>${a.site||''}`);}
-        else{mkrs[id].setLatLng([a.lat,a.lng]);}
-      }
-    });
+    dataReceived=true;
+    log('✅ Données reçues via onValue','ok');
+    renderAgents(snap.val()||{});
   },
-  error:(err)=>{
-    log('❌ Erreur lecture agents: '+err.message,'err');
-    if(err.code==='PERMISSION_DENIED'){log('💡 Vérifie: 1) Règles Firebase (.read:true) 2) Clé API autorisée pour github.io','info');}
-    if(err.code==='NETWORK_ERROR'){log('💡 Vérifie ta connexion internet','info');}
-  }
+  error:(err)=>{log('❌ Erreur onValue: '+err.message,'err');if(err.code==='PERMISSION_DENIED')log('💡 Règles Firebase: mettre .read:true','info');}
 });
-log('📡 Écoute alertes SOS...');
+
+// Fallback : fetch direct si onValue ne répond pas après 3s
+setTimeout(()=>{
+  if(!dataReceived){
+    log('⏳ onValue silencieux → test fetch direct...','info');
+    fetch(`${dbUrl}/.json`)
+      .then(r=>{log(`📡 Fetch status: ${r.status}`,'info');return r.json();})
+      .then(d=>{
+        log('✅ Fetch OK: '+JSON.stringify(d).substring(0,120)+'...','ok');
+        if(d?.agents)renderAgents(d.agents);
+        else log('⚠️ Structure inattendue: '+Object.keys(d||{}).join(','),'info');
+      })
+      .catch(e=>log('❌ Fetch échoué: '+e.message,'err'));
+  }
+},3000);
+
+// Rendu des agents
+function renderAgents(agents){
+  const cnt=document.getElementById('cnt');
+  const list=document.getElementById('list');
+  cnt.textContent=Object.keys(agents).length;
+  list.innerHTML='';
+  if(Object.keys(agents).length===0){list.innerHTML='<div style="color:#64748b;font-size:13px;padding:8px">🟡 Aucun agent</div>';return;}
+  Object.entries(agents).forEach(([id,a])=>{
+    const c=document.createElement('div');c.className=`card ${a.status||'offline'}`;
+    c.innerHTML=`<b>${a.name||'?'}</b> <span style="color:${a.status==='online'?'#22c55e':'#94a3b8'}">● ${a.status||'off'}</span><br><small>📍 ${a.site||''}</small>`;
+    list.appendChild(c);
+    if(a.lat&&a.lng){
+      const col=a.status==='online'?'#22c55e':'#94a3b8';
+      if(!mkrs[id])mkrs[id]=L.marker([a.lat,a.lng],{icon:L.divIcon({className:'c',html:`<div style="background:${col};width:12px;height:12px;border-radius:50%;border:2px solid #fff"></div>`,iconSize:[16,16]})}).addTo(map).bindPopup(`<b>${a.name||'Agent'}</b><br>${a.site||''}`);
+      else mkrs[id].setLatLng([a.lat,a.lng]);
+    }
+  });
+}
+
+// Bouton refresh manuel
+window.forceRefresh=()=>{
+  log('🔄 Refresh forcé...','info');
+  fetch(`${dbUrl}/.json?cache=${Date.now()}`)
+    .then(r=>r.json()).then(d=>{if(d?.agents)renderAgents(d.agents);log('✅ Refresh OK','ok');})
+    .catch(e=>log('❌ Refresh: '+e.message,'err'));
+};
+
+// SOS
 let played=new Set();
 onValue(alertsRef,{
   next:(snap)=>{
@@ -44,8 +74,7 @@ onValue(alertsRef,{
       sos.prepend(c);
       if(a.id&&!played.has(a.id)){new Audio('https://actions.google.com/sounds/v1/alarms/beep_short.ogg').play().catch(()=>{});played.add(a.id);}
     });
-  },
-  error:(err)=>log('❌ Erreur SOS: '+err.message,'err')
+  }
 });
-log('🗺️ Carte prête');
+log('🗺️ Prêt');
 </script></body></html>
