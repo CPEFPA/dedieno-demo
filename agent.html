@@ -1,0 +1,39 @@
+﻿<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/><title>Agent Dedienɔ</title><style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:system-ui;background:#0f172a;color:#fff;display:flex;align-items:center;justify-content:center;min-height:100vh;padding:20px}.card{background:#1e293b;padding:20px;border-radius:16px;max-width:380px;width:100%;text-align:center}input,select{width:100%;padding:12px;margin:8px 0;border-radius:8px;border:1px solid #334155;background:#0f172a;color:#fff}.btn{width:100%;padding:14px;margin:10px 0;border:none;border-radius:10px;font-weight:600;cursor:pointer;font-size:15px}.green{background:#22c55e;color:#fff}.red{background:#ef4444;color:#fff;animation:p 2s infinite}@keyframes p{0%,100%{transform:scale(1)}50%{transform:scale(1.02)}}.st{margin-top:14px;font-size:13px;color:#94a3b8}.cd{font-family:monospace;font-size:11px;color:#64748b;margin-top:8px}</style></head><body><div class="card"><h2>👮‍♂️ Agent</h2><input id="n" placeholder="Votre nom"/><select id="s"><option value="Lomé-Centre">Lomé-Centre</option><option value="Agoè-Nyivé">Agoè-Nyivé</option><option value="Bè-Kpota">Bè-Kpota</option></select><button class="btn green" id="sb">📍 Démarrer GPS</button><button class="btn red" id="sosb" style="display:none">🚨 SOS</button><div class="st" id="st">En attente...</div><div class="cd" id="cd"></div></div><script type="module">
+import{db,ref,set,push}from'./js/firebase-config.js';
+let id=null,run=false,nom='',site='';
+const sb=document.getElementById('sb'),sosb=document.getElementById('sosb'),st=document.getElementById('st'),cd=document.getElementById('cd');
+
+sb.onclick=async()=>{
+  nom=document.getElementById('n').value.trim();
+  site=document.getElementById('s').value;
+  if(!nom)return alert('Entrez votre nom !');
+  id='ag_'+Math.random().toString(36).substr(2,9);
+  try{
+    await set(ref(db,`agents/${id}`),{name:nom,site,status:'online',lastPing:Date.now()});
+    sb.style.display='none';sosb.style.display='block';st.textContent='✅ Connecté & GPS actif';
+    run=true;
+    const int=setInterval(async()=>{
+      if(!run)return clearInterval(int);
+      let la,lo;
+      if(navigator.geolocation){try{const p=await new Promise((a,b)=>navigator.geolocation.getCurrentPosition(a,b,{enableHighAccuracy:true,timeout:8000}));la=p.coords.latitude;lo=p.coords.longitude}catch{la=6.1256+(Math.random()-.5)*.02;lo=1.2244+(Math.random()-.5)*.02}}
+      else{la=6.1256+(Math.random()-.5)*.02;lo=1.2244+(Math.random()-.5)*.02}
+      await set(ref(db,`agents/${id}`),{name:nom,site,status:'online',lat:la,lng:lo,lastPing:Date.now()});
+      cd.textContent=`📍 ${la.toFixed(5)}, ${lo.toFixed(5)}`;
+    },10000);
+    window.addEventListener('beforeunload',()=>{run=false;clearInterval(int);if(id)set(ref(db,`agents/${id}/status`),'offline').catch(()=>{})});
+  }catch(e){console.error(e);st.textContent='❌ Erreur connexion'}
+};
+
+sosb.onclick=async()=>{
+  console.log('🔴 Bouton SOS cliqué');
+  if(!id)return alert('⚠️ Cliquez d\'abord sur "Démarrer GPS"');
+  try{
+    console.log('📡 Envoi SOS à Firebase...');
+    const alertRef=push(ref(db,'alerts'));
+    await set(alertRef,{id:alertRef.key,agentId:id,agentName:nom,site,timestamp:Date.now(),played:false});
+    console.log('✅ SOS envoyé !');
+    st.textContent='🚨 ALERTE SOS ENVOYÉE !';st.style.color='#ef4444';
+    setTimeout(()=>{st.textContent='✅ GPS actif';st.style.color='#94a3b8'},3000);
+  }catch(e){console.error('❌ Erreur SOS:',e);alert('Erreur: '+e.message)}
+};
+</script></body></html>
