@@ -1,68 +1,209 @@
-﻿<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/><title>Dedienɔ Dashboard</title><link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/><style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:system-ui;background:#f1f5f9;display:grid;grid-template-columns:280px 1fr;min-height:100vh}aside{background:#fff;padding:12px;border-right:1px solid #e2e8f0;overflow-y:auto;display:flex;flex-direction:column}#map{height:100vh}.card{padding:10px;margin:6px 0;border-radius:6px;background:#fff;border:1px solid #e2e8f0;cursor:pointer;transition:background 0.2s}.card:hover{background:#f8fafc}.online{border-left:4px solid #22c55e}.offline{border-left:4px solid #94a3b8;opacity:.7}.sos{background:#fef2f2;border:1px solid #fecaca;padding:10px;margin:6px 0;border-radius:6px;animation:pulse 2s infinite}@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.7}}.debug{padding:6px;margin:6px 0;border-radius:4px;font-size:11px;font-family:monospace;max-height:100px;overflow-y:auto;background:#f8fafc}.debug.ok{color:#166534}.debug.err{color:#991b1b}.refresh{padding:6px 12px;background:#3b82f6;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:12px;margin:4px 0}.refresh:hover{background:#2563eb}@media(max-width:768px){body{grid-template-columns:1fr}aside{max-height:40vh}}</style></head><body><aside><h3>👥 Agents (<span id="cnt">0</span>)</h3><button class="refresh" onclick="forceRefresh()">🔄 Actualiser</button><div id="debug"></div><div id="list"></div><h3 style="margin-top:16px">🚨 SOS</h3><div id="sos"></div></aside><main><div id="map"></div></main><script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script><script type="module">
-import{db,ref,onValue}from'./js/firebase-config.js';
-const debug=document.getElementById('debug');
-function log(m,t='info'){debug.innerHTML+=`<div class="debug ${t}">[${new Date().toLocaleTimeString()}] ${m}</div>`;debug.scrollTop=debug.scrollHeight;}
-log('🔌 Init...','ok');
-const map=L.map('map').setView([6.1256,1.2244],13);
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OSM'}).addTo(map);
-const mkrs={},agentsRef=ref(db,'agents'),alertsRef=ref(db,'alerts'),dbUrl='https://dedieno-demo-default-rtdb.europe-west1.firebasedatabase.app';
-
-// Fonction de rendu centrale
-function renderAgents(agents){
-  const cnt=document.getElementById('cnt'),list=document.getElementById('list');
-  cnt.textContent=Object.keys(agents).length;
-  list.innerHTML='';
-  if(Object.keys(agents).length===0){list.innerHTML='<div style="color:#64748b;font-size:13px;padding:8px">🟡 Aucun agent</div>';return;}
-  Object.entries(agents).forEach(([id,a])=>{
-    // Liste sidebar
-    const c=document.createElement('div');c.className=`card ${a.status||'offline'}`;
-    c.innerHTML=`<b>${a.name||'?'}</b> <span style="color:${a.status==='online'?'#22c55e':'#94a3b8'}">● ${a.status||'off'}</span><br><small>📍 ${a.site||''}</small>`;
-    c.onclick=()=>{if(a.lat&&a.lng){map.setView([a.lat,a.lng],15);mkrs[id]?.openPopup();}};
-    list.appendChild(c);
-    // Marqueur carte
-    if(a.lat&&a.lng){
-      const col=a.status==='online'?'#22c55e':'#94a3b8';
-      if(!mkrs[id]){
-        mkrs[id]=L.marker([a.lat,a.lng],{icon:L.divIcon({className:'c',html:`<div style="background:${col};width:12px;height:12px;border-radius:50%;border:2px solid #fff;box-shadow:0 2px 4px rgba(0,0,0,0.2)"></div>`,iconSize:[16,16]})}).addTo(map).bindPopup(`<b>${a.name||'Agent'}</b><br>${a.site||''}<br><small>${a.lat.toFixed(4)}, ${a.lng.toFixed(4)}</small>`);
-      }else{mkrs[id].setLatLng([a.lat,a.lng]);}
+﻿<!DOCTYPE html><html lang="fr"><head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>📍 Dedienɔ – MILLES SERVICES - Togo</title>
+  
+  <!-- Favicon -->
+  <link rel="icon" type="image/x-icon" href="favicon.ico"/>
+  <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png"/>
+  <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png"/>
+  
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+  
+  <style>
+    :root{
+      --cpefpa-primary:#1e40af;--cpefpa-secondary:#059669;--cpefpa-accent:#f59e0b;
+      --cpefpa-bg:#f8fafc;--cpefpa-card:#fff;--cpefpa-text:#1e293b;--cpefpa-muted:#64748b
     }
-  });
-  log(`✅ ${Object.keys(agents).length} agents affichés`,'ok');
-}
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--cpefpa-bg);color:var(--cpefpa-text);display:grid;grid-template-columns:280px 1fr;min-height:100vh}
+    
+    /* Header branding */
+    .brand-header{padding:12px 16px;background:linear-gradient(135deg,var(--cpefpa-primary),var(--cpefpa-secondary));color:#fff;border-bottom:3px solid var(--cpefpa-accent)}
+    .brand-header h2{font-size:16px;font-weight:700;display:flex;align-items:center;gap:8px}
+    .brand-header small{opacity:.9;font-weight:400}
+    
+    /* Sidebar */
+    aside{background:var(--cpefpa-card);border-right:1px solid #e2e8f0;overflow-y:auto;display:flex;flex-direction:column}
+    
+    /* Carte */
+    #map{height:100vh}
+    .leaflet-popup-content-wrapper{border-radius:12px;border:2px solid var(--cpefpa-primary)}
+    
+    /* Cartes agents */
+    .card{padding:12px;margin:6px 0;border-radius:10px;background:var(--cpefpa-card);border:1px solid #e2e8f0;border-left:4px solid var(--cpefpa-secondary);cursor:pointer;transition:all 0.2s}
+    .card:hover{transform:translateX(4px);box-shadow:0 4px 12px rgba(30,64,175,0.15)}
+    .card.online{border-left-color:var(--cpefpa-secondary)}
+    .card.offline{border-left-color:var(--cpefpa-muted);opacity:.8}
+    
+    /* SOS */
+    .sos{background:#fef2f2;border:2px solid #fecaca;padding:12px;margin:6px 0;border-radius:10px;animation:pulse 1.5s infinite}
+    @keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,0.4)}50%{box-shadow:0 0 0 12px rgba(239,68,68,0)}}
+    
+    /* Boutons */
+    .refresh{padding:8px 16px;background:var(--cpefpa-primary);color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:13px;font-weight:600;margin:4px 0;transition:background 0.2s}
+    .refresh:hover{background:#1d4ed8}
+    
+    /* Debug */
+    .debug{padding:6px;margin:6px 0;border-radius:6px;font-size:11px;font-family:monospace;max-height:100px;overflow-y:auto;background:#f1f5f9}
+    .debug.ok{color:var(--cpefpa-secondary)}.debug.err{color:#dc2626}
+    
+    /* Responsive */
+    @media(max-width:768px){body{grid-template-columns:1fr}aside{max-height:40vh;border-right:none;border-bottom:1px solid #e2e8f0}}
+  </style>
+</head>
+<body>
+  <aside>
+    <!-- 🎨 Header Branding CPEFPA / MILLES SERVICES -->
+    <div class="brand-header">
+      <h2>
+        <img src="https://via.placeholder.com/32x32/1e40af/ffffff?text=M" alt="Logo" style="width:24px;height:24px;border-radius:4px"/>
+        Dedienɔ
+        <small style="display:block;font-size:11px;margin-top:2px">MILLES SERVICES • Togo 🇹🇬</small>
+      </h2>
+    </div>
+    
+    <h3 style="padding:0 12px 8px">👥 Agents (<span id="cnt">0</span>)</h3>
+    <button class="refresh" style="margin:0 12px" onclick="forceRefresh()">🔄 Actualiser</button>
+    <div id="debug" style="margin:0 12px"></div>
+    <div id="list" style="padding:0 12px"></div>
+    
+    <h3 style="padding:16px 12px 8px;border-top:1px solid #e2e8f0;margin-top:8px">🚨 Alertes SOS</h3>
+    <div id="sos" style="padding:0 12px 12px"></div>
+  </aside>
+  
+  <main><div id="map"></div></main>
 
-// Écoute temps réel Firebase
-onValue(agentsRef,(snap)=>{
-  log('📡 onValue triggered','ok');
-  const data=snap.val()||{};
-  renderAgents(data);
-},{onlyOnce:false});
-
-// Fallback fetch si onValue ne répond pas sous 2s
-setTimeout(()=>{
-  if(document.getElementById('cnt').textContent==='0'){
-    log('⏳ Fallback fetch...','info');
-    fetch(`${dbUrl}/agents.json?cache=${Date.now()}`).then(r=>r.json()).then(d=>{if(d)renderAgents(d);}).catch(e=>log('❌ Fetch: '+e.message,'err'));
-  }
-},2000);
-
-// Refresh manuel
-window.forceRefresh=()=>{
-  log('🔄 Refresh...','info');
-  fetch(`${dbUrl}/.json?cache=${Date.now()}`).then(r=>r.json()).then(d=>{if(d?.agents)renderAgents(d.agents);}).catch(e=>log('❌ '+e.message,'err'));
-};
-
-// SOS
-let played=new Set();
-onValue(alertsRef,(snap)=>{
-  const d=snap.val()||{};
-  const sos=document.getElementById('sos');sos.innerHTML='';
-  if(Object.keys(d).length===0){sos.innerHTML='<div style="color:#64748b;font-size:13px;padding:8px">✅ Aucune alerte</div>';return;}
-  Object.values(d).sort((a,b)=>(b.timestamp||0)-(a.timestamp||0)).forEach(a=>{
-    const c=document.createElement('div');c.className='sos';
-    c.innerHTML=`🚨 <b>${a.site||'?'}</b><br><small>👤 ${a.agentName||'?'}</small><br><small>🕐 ${a.timestamp?new Date(a.timestamp).toLocaleString('fr-FR'):''}</small>`;
-    sos.prepend(c);
-    if(a.id&&!played.has(a.id)){new Audio('https://actions.google.com/sounds/v1/alarms/beep_short.ogg').play().catch(()=>{});played.add(a.id);}
-  });
-});
-log('🗺️ Prêt','ok');
-</script></body></html>
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  
+  <!-- App Script -->
+  <script type="module">
+    import{db,ref,onValue}from'./js/firebase-config.js';
+    
+    const debug=document.getElementById('debug');
+    function log(m,t='info'){debug.innerHTML+=`<div class="debug ${t}">[${new Date().toLocaleTimeString()}] ${m}</div>`;debug.scrollTop=debug.scrollHeight;}
+    log('🔌 Init...','ok');
+    
+    // 🗺️ Carte centrée sur Lomé
+    const map=L.map('map').setView([6.1256,1.2244],13);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap'}).addTo(map);
+    
+    const mkrs={},agentsRef=ref(db,'agents'),alertsRef=ref(db,'alerts');
+    const dbUrl='https://dedieno-demo-default-rtdb.europe-west1.firebasedatabase.app';
+    
+    // 🔊 Fonction son SOS puissant + répétitif + vibration
+    function playSOSAlert(){
+      const audio=new Audio('https://actions.google.com/sounds/v1/alarms/air_horn.ogg');
+      audio.volume=1.0;
+      let count=0;
+      const interval=setInterval(()=>{
+        audio.currentTime=0;
+        audio.play().catch(()=>{});
+        count++;
+        if(count>=3)clearInterval(interval);
+      },800);
+      if(navigator.vibrate)navigator.vibrate([500,200,500,200,500]);
+    }
+    
+    // 🎨 Fonction de rendu des agents (liste + carte)
+    function renderAgents(agents){
+      const cnt=document.getElementById('cnt'),list=document.getElementById('list');
+      cnt.textContent=Object.keys(agents).length;
+      list.innerHTML='';
+      
+      if(Object.keys(agents).length===0){
+        list.innerHTML='<div style="color:var(--cpefpa-muted);font-size:13px;padding:8px">🟡 Aucun agent en ligne</div>';
+        return;
+      }
+      
+      Object.entries(agents).forEach(([id,a])=>{
+        // 📋 Carte dans la sidebar
+        const c=document.createElement('div');
+        c.className=`card ${a.status||'offline'}`;
+        c.innerHTML=`<b>${a.name||'?'}</b> <span style="color:${a.status==='online'?'var(--cpefpa-secondary)':'var(--cpefpa-muted)'}">● ${a.status||'off'}</span><br><small>📍 ${a.site||''}</small>`;
+        c.onclick=()=>{if(a.lat&&a.lng){map.setView([a.lat,a.lng],16);mkrs[id]?.openPopup();}};
+        list.appendChild(c);
+        
+        // 🗺️ Marqueur sur la carte (position EXACTE)
+        if(a.lat&&a.lng){
+          const col=a.status==='online'?'var(--cpefpa-secondary)':'var(--cpefpa-muted)';
+          if(!mkrs[id]){
+            mkrs[id]=L.marker([a.lat,a.lng],{
+              icon:L.divIcon({
+                className:'c',
+                html:`<div style="background:${col};width:14px;height:14px;border-radius:50%;border:3px solid #fff;box-shadow:0 3px 8px rgba(0,0,0,0.3)"></div>`,
+                iconSize:[20,20],iconAnchor:[10,10]
+              })
+            }).addTo(map).bindPopup(`
+              <b>${a.name||'Agent'}</b><br>
+              📍 ${a.site||''}<br>
+              <small style="color:#64748b">
+                ${a.lat?.toFixed(6)}, ${a.lng?.toFixed(6)}<br>
+                ${a.accuracy?`🎯 Précision: ±${Math.round(a.accuracy)}m`:''}
+              </small><br>
+              <small>🕐 ${a.lastPing?new Date(a.lastPing).toLocaleTimeString('fr-FR'):''}</small>
+            `);
+          }else{
+            mkrs[id].setLatLng([a.lat,a.lng]);
+          }
+        }
+      });
+      log(`✅ ${Object.keys(agents).length} agents affichés`,'ok');
+    }
+    
+    // 📡 Écoute temps réel des agents
+    onValue(agentsRef,(snap)=>{
+      log('📡 onValue agents triggered','ok');
+      const data=snap.val()||{};
+      renderAgents(data);
+    },{onlyOnce:false});
+    
+    // 🔄 Fallback fetch si onValue ne répond pas sous 2.5s
+    setTimeout(()=>{
+      if(document.getElementById('cnt').textContent==='0'){
+        log('⏳ Fallback fetch agents...','info');
+        fetch(`${dbUrl}/agents.json?cache=${Date.now()}`)
+          .then(r=>r.json()).then(d=>{if(d)renderAgents(d);})
+          .catch(e=>log('❌ Fetch agents: '+e.message,'err'));
+      }
+    },2500);
+    
+    // 🔄 Refresh manuel
+    window.forceRefresh=()=>{
+      log('🔄 Refresh manuel...','info');
+      fetch(`${dbUrl}/.json?cache=${Date.now()}`)
+        .then(r=>r.json()).then(d=>{if(d?.agents)renderAgents(d.agents);})
+        .catch(e=>log('❌ Refresh: '+e.message,'err'));
+    };
+    
+    // 🚨 Écoute des alertes SOS
+    let played=new Set();
+    onValue(alertsRef,(snap)=>{
+      const d=snap.val()||{};
+      const sos=document.getElementById('sos');
+      sos.innerHTML='';
+      
+      if(Object.keys(d).length===0){
+        sos.innerHTML='<div style="color:var(--cpefpa-muted);font-size:13px;padding:8px">✅ Aucune alerte</div>';
+        return;
+      }
+      
+      Object.values(d).sort((a,b)=>(b.timestamp||0)-(a.timestamp||0)).forEach(a=>{
+        const c=document.createElement('div');
+        c.className='sos';
+        c.innerHTML=`🚨 <b>${a.site||'?'}</b><br><small>👤 ${a.agentName||'?'}</small><br><small>🕐 ${a.timestamp?new Date(a.timestamp).toLocaleString('fr-FR'):''}</small>`;
+        sos.prepend(c);
+        
+        // 🔊 Son SOS puissant (une fois par alerte)
+        if(a.id&&!played.has(a.id)){
+          playSOSAlert();
+          played.add(a.id);
+        }
+      });
+    });
+    
+    log('🗺️ Dashboard prêt','ok');
+  </script>
+</body></html>
