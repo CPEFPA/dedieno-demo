@@ -40,11 +40,21 @@
 .modal p,.modal li{margin:6px 0;font-size:14px;line-height:1.5}
 .modal code{background:#f1f5f9;padding:2px 6px;border-radius:4px;font-family:monospace}
 .modal-close{margin-top:16px;width:100%;background:#64748b;color:#fff;padding:10px;border:none;border-radius:8px;cursor:pointer}
+.stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:12px 0}
+.stat-card{background:#f8fafc;padding:12px;border-radius:8px;text-align:center;border:1px solid #e2e8f0}
+.stat-num{font-size:24px;font-weight:700;color:#1e40af}
+.stat-label{font-size:12px;color:#64748b;margin-top:4px}
 @media(max-width:768px){.grid{grid-template-columns:1fr}aside{max-height:65vh;overflow-y:auto;border-right:none;border-bottom:1px solid #e2e8f0}#btn-logout,#btn-logout-ag{margin-top:auto;width:100%;display:block}}
 </style></head><body>
 <div id="view-login" class="view active"><div class="login-card"><img src="logo.png"/><h1>🔐 Dedienɔ</h1><small>MILLES SERVICES • Togo 🇹🇬</small><input id="login-id" placeholder="Identifiant (ex: SUPER, AGT001)"/><input id="login-pass" type="password" placeholder="Mot de passe"/><button id="btn-login">Se connecter</button><div id="login-err" class="login-err"></div></div></div>
-<div id="view-supervisor" class="view"><div class="grid"><aside id="sup-sidebar"><div class="brand"><img src="logo.png"/><div><h1>Dedienɔ<small>Superviseur</small></div></div><h3>👥 Agents (<span id="sup-cnt">0</span>)</h3><button class="btn btn-primary" id="btn-refresh">🔄 Actualiser</button><button class="btn btn-secondary" id="btn-csv">📊 Export CSV</button><button class="btn btn-warning" id="btn-add-guide">➕ Ajouter Agent/Sup</button><div id="sup-debug" class="debug"></div><div id="sup-list"></div><hr><h3>🚨 Alertes SOS</h3><div id="sup-sos"></div><button class="btn btn-danger" id="btn-logout">🔒 Déconnexion</button></aside><main style="height:100%;overflow:hidden"><div id="map"></div></main></div></div>
+<div id="view-supervisor" class="view"><div class="grid"><aside id="sup-sidebar"><div class="brand"><img src="logo.png"/><div><h1>Dedienɔ<small>Superviseur</small></div></div><h3>👥 Agents (<span id="sup-cnt">0</span>)</h3><button class="btn btn-primary" id="btn-refresh">🔄 Actualiser</button><button class="btn btn-secondary" id="btn-csv">📊 Export CSV</button><button class="btn btn-secondary" id="btn-report">📋 Rapport</button><button class="btn btn-warning" id="btn-add-guide">➕ Ajouter Agent/Sup</button><div id="sup-debug" class="debug"></div><div id="sup-list"></div><hr><h3>🚨 Alertes SOS</h3><div id="sup-sos"></div><button class="btn btn-danger" id="btn-logout">🔒 Déconnexion</button></aside><main style="height:100%;overflow:hidden"><div id="map"></div></main></div></div>
 <div id="view-agent" class="view"><div class="agent-panel"><div class="brand"><img src="logo.png"/><h1>👮 Agent Dedienɔ<small>MILLES SERVICES</small></h1></div><input id="ag-name" placeholder="Nom *"/><select id="ag-site"><option value="">-- Choisir --</option><option value="Lomé-Centre">🏢 Lomé-Centre</option><option value="Agoè-Nyivé">🏘️ Agoè-Nyivé</option><option value="Bè-Kpota">🏭 Bè-Kpota</option><option value="Tokoin">🏥 Tokoin</option><option value="Nyékonakpoè">🏘️ Nyékonakpoè</option><option value="Adidogomé">🏢 Adidogomé</option><option value="Kégué">🏭 Kégué</option><option value="Zongo">🕌 Zongo</option><option value="Autre">📍 Autre</option></select><button id="btn-gps" class="btn-green">📍 Démarrer le pointage</button><div id="ag-status" style="margin-top:10px;padding:8px;background:#0f172a;border-radius:6px">En attente...</div><button id="btn-sos" class="btn-red" style="display:none">🚨 SOS</button><button id="btn-logout-ag" class="btn-gray">🔒 Déconnexion</button></div></div>
+
+<div id="modal-report" class="modal-overlay"><div class="modal">
+  <h2>📋 Rapport Terrain en Temps Réel</h2>
+  <div id="report-content" style="font-size:14px;line-height:1.6">⏳ Chargement des données...</div>
+  <button class="modal-close" onclick="document.getElementById('modal-report').classList.remove('active')">Fermer</button>
+</div></div>
 
 <div id="modal-guide" class="modal-overlay"><div class="modal">
   <h2>➕ Ajouter un nouvel Agent ou Superviseur</h2>
@@ -58,12 +68,8 @@
     <li>Clique sur <strong>"Ajouter"</strong> → Copie l'<strong>UID</strong> affiché</li>
     <li>Ouvre 👉 <a href="https://console.firebase.google.com/project/dedieno-demo/database" target="_blank">Realtime Database → Données</a></li>
     <li>Dans <code>users/</code>, clique sur <strong>+</strong> → Clé : <strong>l'UID copié</strong></li>
-    <li>Ajoute les champs :<br>
-      <code>role</code> : <code>"agent"</code> (ou <code>"superviseur"</code>)<br>
-      <code>name</code> : <code>"Nom Prénom"</code><br>
-      <code>site</code> : <code>"Site choisi"</code> (agent uniquement)</li>
+    <li>Ajoute les champs :<br><code>role</code> : <code>"agent"</code> (ou <code>"superviseur"</code>)<br><code>name</code> : <code>"Nom Prénom"</code><br><code>site</code> : <code>"Site choisi"</code> (agent uniquement)</li>
   </ol>
-  <p style="margin-top:12px;font-size:12px;color:#64748b">💡 Astuce : Crée un fichier Excel de suivi : Identifiant | UID | Rôle | Site | Mot de passe</p>
   <button class="modal-close" onclick="document.getElementById('modal-guide').classList.remove('active')">✅ Compris, fermer</button>
 </div></div>
 
@@ -74,7 +80,7 @@ import{getAuth,onAuthStateChanged,signInWithEmailAndPassword,signOut}from"https:
 const app=initializeApp({apiKey:"AIzaSyBhlLLm1Vvl3U3JYFZ8rzJJW4pimYDQEEU",authDomain:"dedieno-demo.firebaseapp.com",databaseURL:"https://dedieno-demo-default-rtdb.europe-west1.firebasedatabase.app",projectId:"dedieno-demo"});
 const db=getDatabase(app),auth=getAuth(app);
 
-let map=null,mkrs={};
+let map=null,mkrs={},agentsCache={},alertsCache={};
 function showView(n){document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));const el=document.getElementById('view-'+n);if(el)el.classList.add('active');}
 
 // 🔐 ROUTING
@@ -103,11 +109,24 @@ function initSup(){
   if(typeof L==='undefined') return;
   if(map){map.invalidateSize();return;}
   setTimeout(()=>{if(!document.getElementById('map'))return;map=L.map('map').setView([6.1256,1.2244],13);L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19}).addTo(map);},150);
-  onValue(ref(db,'agents'),s=>{const a=s.val()||{};document.getElementById('sup-cnt').textContent=Object.keys(a).length;const l=document.getElementById('sup-list');l.innerHTML='';Object.entries(a).forEach(([id,x])=>{const c=document.createElement('div');c.className='agent-card';c.innerHTML='<b>'+(x.name||'?')+'</b> <span style="color:'+(x.status==='online'?'#059669':'#64748b')+'">● '+(x.status||'off')+'</span>';c.onclick=()=>{if(mkrs[id]&&x.lat&&map)map.setView([x.lat,x.lng],16);};l.appendChild(c);if(x.lat&&x.lng&&map){const col=x.status==='online'?'#059669':'#94a3b8';if(!mkrs[id])mkrs[id]=L.marker([x.lat,x.lng],{icon:L.divIcon({html:'<div style="background:'+col+';width:12px;height:12px;border-radius:50%;border:3px solid #fff"></div>',iconSize:[18,18]})}).addTo(map);else mkrs[id].setLatLng([x.lat,x.lng]);}});});
+  onValue(ref(db,'agents'),s=>{
+    agentsCache=s.val()||{};
+    document.getElementById('sup-cnt').textContent=Object.keys(agentsCache).length;
+    const l=document.getElementById('sup-list');l.innerHTML='';
+    Object.entries(agentsCache).forEach(([id,x])=>{
+      const c=document.createElement('div');c.className='agent-card';
+      c.innerHTML='<b>'+(x.name||'?')+'</b> <span style="color:'+(x.status==='online'?'#059669':'#64748b')+'">● '+(x.status||'off')+'</span>';
+      c.onclick=()=>{if(mkrs[id]&&x.lat&&map)map.setView([x.lat,x.lng],16);};l.appendChild(c);
+      if(x.lat&&x.lng&&map){const col=x.status==='online'?'#059669':'#94a3b8';
+        if(!mkrs[id])mkrs[id]=L.marker([x.lat,x.lng],{icon:L.divIcon({html:'<div style="background:'+col+';width:12px;height:12px;border-radius:50%;border:3px solid #fff"></div>',iconSize:[18,18]})}).addTo(map);
+        else mkrs[id].setLatLng([x.lat,x.lng]);}
+    });
+  });
   onValue(ref(db,'alerts'),s=>{
-    const d=s.val()||{}, sos=document.getElementById('sup-sos');
-    sos.innerHTML=Object.keys(d).length?'':'<div style="padding:8px;color:#64748b">✅ Aucune alerte</div>';
-    Object.values(d).sort((a,b)=>(b.timestamp||0)-(a.timestamp||0)).forEach(a=>{
+    alertsCache=s.val()||{};
+    const sos=document.getElementById('sup-sos');
+    sos.innerHTML=Object.keys(alertsCache).length?'':'<div style="padding:8px;color:#64748b">✅ Aucune alerte</div>';
+    Object.values(alertsCache).sort((a,b)=>(b.timestamp||0)-(a.timestamp||0)).forEach(a=>{
       const time=a.timestamp?new Date(a.timestamp).toLocaleTimeString('fr-FR'):'--:--';
       sos.prepend(`<div class="sos-alert">
         <div class="sos-header"><span class="sos-site">🚨 ${a.site||'Site inconnu'}</span><span class="sos-time">${time}</span></div>
@@ -119,6 +138,25 @@ function initSup(){
 }
 document.getElementById('btn-refresh')?.addEventListener('click',()=>{if(map)map.invalidateSize();initSup();});
 document.getElementById('btn-csv')?.addEventListener('click',()=>alert('📊 Export CSV lancé...'));
+
+// 📋 RAPPORT
+document.getElementById('btn-report')?.addEventListener('click',()=>{
+  const total=Object.keys(agentsCache).length;
+  const online=Object.values(agentsCache).filter(a=>a.status==='online').length;
+  const alerts=Object.keys(alertsCache).length;
+  const lastSync=new Date().toLocaleString('fr-FR');
+  document.getElementById('report-content').innerHTML=`
+    <div class="stats-grid">
+      <div class="stat-card"><div class="stat-num">${total}</div><div class="stat-label">Agents recensés</div></div>
+      <div class="stat-card"><div class="stat-num" style="color:#059669">${online}</div><div class="stat-label">En ligne actuellement</div></div>
+      <div class="stat-card"><div class="stat-num" style="color:#ef4444">${alerts}</div><div class="stat-label">Alertes SOS reçues</div></div>
+      <div class="stat-card"><div class="stat-num" style="color:#1e40af">🟢</div><div class="stat-label">Système opérationnel</div></div>
+    </div>
+    <p style="margin-top:12px"><strong>Dernière synchronisation :</strong> ${lastSync}</p>
+    <p style="font-size:12px;color:#64748b">💡 Pour un rapport détaillé (CSV), utilise le bouton 📊 Export CSV. Les données sont horodatées et prêtes pour Excel.</p>
+  `;
+  document.getElementById('modal-report').classList.add('active');
+});
 
 // 👮 AGENT
 let agId=null,agRun=false,agInterval=null;
