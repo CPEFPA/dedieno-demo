@@ -25,3 +25,4 @@ export const db = getDatabase(app);
 
 // Export des fonctions utiles
 export { ref, set, onValue, push, update };
+
