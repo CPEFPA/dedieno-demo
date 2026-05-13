@@ -50,7 +50,7 @@ onAuthStateChanged(auth, async u => {
     let rawRole = String(data.role || '');
     let cleanRole = rawRole.replace(/^["']|["']$/g, '').trim().toLowerCase();
     console.log('🔍 Role brut:',rawRole,'| nettoyé:',cleanRole);
-    if(cleanRole==='superviseur'){console.log('✅ Dashboard');showView('supervisor');initSup();}
+    if(cleanRole.includes('superviseur')){console.log('✅ Dashboard');showView('supervisor');initSup();}
     else{console.log('✅ Agent (role:',cleanRole,')');showView('agent');initAg();}
   }catch(e){console.error('❌ DB:',e);showView('login');}
 });
@@ -116,3 +116,4 @@ document.getElementById('btn-sos')?.addEventListener('click',async()=>{if(!agId)
   document.getElementById('ag-status').textContent='🚨 SOS ENVOYÉ';
 });
 </script></body></html>
+
