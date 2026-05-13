@@ -30,7 +30,14 @@
     .debug.ok{color:var(--cpefpa-secondary)}.debug.err{color:#dc2626}
     @media(max-width:768px){body{grid-template-columns:1fr}aside{max-height:40vh;border-right:none;border-bottom:1px solid #e2e8f0}}
   </style>
-</head>
+  <!-- 📱 PWA Meta Tags -->
+  <link rel="manifest" href="manifest.json"/>
+  <meta name="theme-color" content="#1e40af"/>
+  <meta name="apple-mobile-web-app-capable" content="yes"/>
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+  <meta name="apple-mobile-web-app-title" content="Dedienɔ"/>
+  <link rel="apple-touch-icon" href="logo.png"/>
+  
 
 <body>
   <aside>
@@ -132,6 +139,7 @@
     onValue(alertsRef,s=>{const d=s.val()||{};const sos=document.getElementById('sos');sos.innerHTML='';if(!Object.keys(d).length){sos.innerHTML='<div style="color:var(--cpefpa-muted);font-size:13px;padding:8px">✅ Aucune alerte</div>';return;}Object.values(d).sort((a,b)=>(b.timestamp||0)-(a.timestamp||0)).forEach(a=>{const c=document.createElement('div');c.className='sos';c.innerHTML=`🚨 <b>${a.site||'?'}</b><br><small>👤 ${a.agentName||'?'}</small><br><small>🕐 ${a.timestamp?new Date(a.timestamp).toLocaleString('fr-FR'):''}</small>`;sos.prepend(c);if(a.id&&!played.has(a.id)){playSOSAlert();played.add(a.id);}});});
     
     log('🗺️ Dashboard prêt','ok');
-  </script>
-</body>
-</html>
+  // 📱 Enregistrement Service Worker + Gestion installation PWA
+if('serviceWorker' in navigator){window.addEventListener('load',()=>{navigator.serviceWorker.register('service-worker.js',{scope:'/dedieno-demo/'}).then(r=>console.log('✅ SW enregistré:',r.scope)).catch(e=>console.error('❌ SW échec:',e));});}
+let deferredPrompt;const installBtn=document.createElement('button');installBtn.className='refresh btn-secondary';installBtn.style.cssText='margin:0 12px;display:none';installBtn.innerHTML='📲 Installer l\'app';installBtn.onclick=()=>{if(deferredPrompt){deferredPrompt.prompt();deferredPrompt.userChoice.then(c=>{if(c.outcome==='accepted')log('✅ App installée','ok');deferredPrompt=null;installBtn.style.display='none';});}};document.querySelector('aside')?.insertBefore(installBtn,document.querySelector('#debug'));window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredPrompt=e;installBtn.style.display='block';log('📱 App installable','ok');});window.addEventListener('appinstalled',()=>{log('🎉 PWA installée !','ok');installBtn.style.display='none';});
+

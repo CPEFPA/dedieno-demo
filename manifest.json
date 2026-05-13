@@ -1,0 +1,17 @@
+﻿{
+  "name": "Dedienɔ – MILLES SERVICES",
+  "short_name": "Dedienɔ",
+  "description": "Application de suivi terrain pour agents MILLES SERVICES • Togo",
+  "start_url": "/dedieno-demo/",
+  "display": "standalone",
+  "background_color": "#f8fafc",
+  "theme_color": "#1e40af",
+  "orientation": "portrait-primary",
+  "icons": [
+    { "src": "logo.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "logo.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ],
+  "categories": ["business", "productivity"],
+  "lang": "fr",
+  "dir": "ltr"
+}

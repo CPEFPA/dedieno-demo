@@ -8,7 +8,14 @@
 
 <>:root{--cpefpa-primary:#1e40af;--cpefpa-secondary:#059669;--cpefpa-accent:#f59e0b;--cpefpa-bg:#0f172a;--cpefpa-card:#1e293b;--cpefpa-text:#fff;--cpefpa-muted:#94a3b8}*{box-sizing:border-box;margin:0;padding:0}body{font-family:'Segoe UI',system-ui,sans-serif;background:linear-gradient(135deg,var(--cpefpa-primary),var(--cpefpa-secondary));color:var(--cpefpa-text);display:flex;align-items:center;justify-content:center;min-height:100vh;padding:20px}.card{background:var(--cpefpa-card);padding:24px;border-radius:20px;max-width:420px;width:100%;text-align:center;box-shadow:0 20px 40px rgba(0,0,0,0.3);border:2px solid var(--cpefpa-primary)}.brand{display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:16px;padding-bottom:16px;border-bottom:2px solid var(--cpefpa-accent)}.brand img{width:40px;height:40px;border-radius:8px;object-fit:cover;flex-shrink:0;box-shadow:0 2px 8px rgba(0,0,0,0.2)}.brand h2{font-size:18px;font-weight:700}.brand small{display:block;font-size:11px;color:var(--cpefpa-muted);margin-top:4px}.input-group{margin:12px 0;text-align:left}label{display:block;font-size:13px;color:var(--cpefpa-muted);margin-bottom:6px}input,select{width:100%;padding:12px;border-radius:10px;border:1px solid #334155;background:#0f172a;color:#fff;font-size:15px}input:disabled,select:disabled{opacity:0.7}.btn{width:100%;padding:14px;margin:10px 0;border:none;border-radius:12px;font-weight:600;cursor:pointer;font-size:15px}.btn:disabled{opacity:0.6;cursor:not-allowed}.green{background:#22c55e;color:#fff}.red{background:#ef4444;color:#fff;animation:pulse 2s infinite}@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.02)}}.status{margin-top:16px;padding:12px;border-radius:10px;background:#0f172a;font-size:14px;min-height:44px}.status.ok{color:#22c55e}.status.err{color:#ef4444}.coords{font-family:monospace;font-size:12px;color:var(--cpefpa-muted);margin-top:10px;padding:10px;background:#0f172a;border-radius:8px}.confirm{background:#334155;padding:16px;border-radius:12px;margin:12px 0;display:none}.confirm.active{display:block}.confirm-btn{background:#3b82f6;color:#fff;padding:10px 20px;border:none;border-radius:8px;cursor:pointer;margin:4px}.confirm-btn.secondary{background:#64748b}.footer{margin-top:20px;font-size:11px;color:var(--cpefpa-muted);padding-top:16px;border-top:1px solid #334155}</>
 
-</head>
+  <!-- 📱 PWA Meta Tags -->
+  <link rel="manifest" href="manifest.json"/>
+  <meta name="theme-color" content="#1e40af"/>
+  <meta name="apple-mobile-web-app-capable" content="yes"/>
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+  <meta name="apple-mobile-web-app-title" content="Dedienɔ"/>
+  <link rel="apple-touch-icon" href="logo.png"/>
+  
 <body>
 <div class="card">
 <div class="brand">
@@ -55,6 +62,7 @@
 
 </body>
 </html>
+
 
 
 
