@@ -46,14 +46,14 @@ const app = initializeApp({
 const db = getDatabase(app);
 const auth = getAuth(app);
 
-function showView(name) {
+function showView(name){if(name==='login'){document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));}const el=document.getElementById(iew-{name});if(el)el.classList.add('active');console.log(🎭 Vue affichée : {name});};showView('login');function showView2 {
   document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
   const el = document.getElementById(`view-${name}`);
   if (el) el.classList.add('active');
 }
 
 // 🔐 Routing
-onAuthStateChanged(auth, async (user) => {
+onAuthStateChanged(auth, async (user) => {await new Promise(r=>setTimeout(r,300));if(!user){console.log('🔐 Pas connecté → login');showView('login');return;}
   if (!user) return showView('login');
   try {
     const snap = await get(ref(db, `users/${user.uid}`));
@@ -63,12 +63,12 @@ onAuthStateChanged(auth, async (user) => {
       showView('supervisor');
       if (typeof initSupervisor === 'function') initSupervisor();
     } else {
-      showView('agent');
+      console.warn('⚠️ Rôle inconnu → retour login');showView('login');
       if (typeof initAgent === 'function') initAgent();
     }
   } catch (err) {
     console.error('❌ Erreur lecture rôle:', err);
-    showView('agent');
+    console.warn('⚠️ Rôle inconnu → retour login');showView('login');
     if (typeof initAgent === 'function') initAgent();
   }
 });
@@ -196,3 +196,4 @@ document.getElementById('btn-sos')?.addEventListener('click', async () => {
   setTimeout(() => document.getElementById('ag-status').textContent = '✅ GPS actif', 30000);
 });
 </script></body></html>
+
