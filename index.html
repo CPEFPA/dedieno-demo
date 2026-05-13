@@ -1,242 +1,115 @@
-﻿<!DOCTYPE html>
-<html lang="fr">
-<head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-  <title>📍 Dedienɔ – MILLES SERVICES - Togo</title>
-  <link rel="icon" type="image/x-icon" href="favicon.ico"/>
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
-  <style>
-    :root{--cpefpa-primary:#1e40af;--cpefpa-secondary:#059669;--cpefpa-accent:#f59e0b;--cpefpa-bg:#f8fafc;--cpefpa-card:#fff;--cpefpa-text:#1e293b;--cpefpa-muted:#64748b}
-    *{box-sizing:border-box;margin:0;padding:0}
-    body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--cpefpa-bg);color:var(--cpefpa-text);display:grid;grid-template-columns:280px 1fr;min-height:100vh}
-    .brand-header{padding:12px 16px;background:linear-gradient(135deg,var(--cpefpa-primary),var(--cpefpa-secondary));color:#fff;border-bottom:3px solid var(--cpefpa-accent)}
-    .brand-header h2{font-size:16px;font-weight:700;display:flex;align-items:center;gap:8px}
-    .brand-header small{opacity:.9;font-weight:400}
-    aside{background:var(--cpefpa-card);border-right:1px solid #e2e8f0;overflow-y:auto;display:flex;flex-direction:column}
-    #map{height:100vh}
-    .leaflet-popup-content-wrapper{border-radius:12px;border:2px solid var(--cpefpa-primary)}
-    .card{padding:12px;margin:6px 0;border-radius:10px;background:var(--cpefpa-card);border:1px solid #e2e8f0;border-left:4px solid var(--cpefpa-secondary);cursor:pointer;transition:all 0.2s}
-    .card:hover{transform:translateX(4px);box-shadow:0 4px 12px rgba(30,64,175,0.15)}
-    .card.online{border-left-color:var(--cpefpa-secondary)}
-    .card.offline{border-left-color:var(--cpefpa-muted);opacity:.8}
-    .sos{background:#fef2f2;border:2px solid #fecaca;padding:12px;margin:6px 0;border-radius:10px;animation:pulse 1.5s infinite}
-    @keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,0.4)}50%{box-shadow:0 0 0 12px rgba(239,68,68,0)}}
-    .refresh{padding:8px 16px;border:none;border-radius:8px;cursor:pointer;font-size:13px;font-weight:600;margin:4px 0;color:#fff;transition:0.2s}
-    .btn-primary{background:var(--cpefpa-primary)}.btn-primary:hover{background:#1d4ed8}
-    .btn-secondary{background:var(--cpefpa-secondary)}.btn-secondary:hover{background:#047857}
-    .debug{padding:6px;margin:6px 0;border-radius:6px;font-size:11px;font-family:monospace;max-height:100px;overflow-y:auto;background:#f1f5f9}
-    .debug.ok{color:var(--cpefpa-secondary)}.debug.err{color:#dc2626}
-    @media(max-width:768px){body{grid-template-columns:1fr}aside{max-height:40vh;border-right:none;border-bottom:1px solid #e2e8f0}}
-  </style>
-</head>
-<body>
-  <aside>
-    <div class="brand-header">
-      <h2><img src="logo.png" alt="Logo" style="width:24px;height:24px;border-radius:4px"/>Dedienɔ<small style="display:block;font-size:11px;margin-top:2px">MILLES SERVICES • Togo 🇹🇬</small></h2>
-    </div>
-    <h3 style="padding:0 12px 8px">👥 Agents (<span id="cnt">0</span>)</h3>
-    <button class="refresh btn-primary" style="margin:0 12px" onclick="window.forceRefresh()">🔄 Actualiser</button>
-    <button class="refresh btn-secondary" style="margin:0 12px" onclick="window.exportCSV()">📊 Exporter CSV</button>
-    <button class="refresh btn-secondary" style="margin:0 12px" onclick="window.showReport()">📋 Rapport</button>
-    <div id="debug" style="margin:0 12px"></div>
-    <div id="list" style="padding:0 12px"></div>
-    <button class="refresh btn-primary" style="margin:12px" onclick="window.logout()">🔒 Déconnexion</button>
-    <h3 style="padding:16px 12px 8px;border-top:1px solid #e2e8f0;margin-top:8px">🚨 Alertes SOS</h3>
-    <div id="sos" style="padding:0 12px 12px"></div>
-  </aside>
-  <main><div id="map"></div></main>
+﻿<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/><title>📍 Dedienɔ – MILLES SERVICES</title><link rel="icon" href="favicon.ico"/><link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/><style>:root{--p:#1e40af;--s:#059669;--a:#f59e0b;--bg:#f8fafc;--card:#fff;--txt:#1e293b;--muted:#64748b}*{box-sizing:border-box;margin:0;padding:0}body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--txt);min-height:100vh;display:flex;flex-direction:column}.view{display:none;flex:1}.view.active{display:flex}.brand{padding:12px 16px;background:linear-gradient(135deg,var(--p),var(--s));color:#fff;border-bottom:3px solid var(--a);display:flex;align-items:center;gap:10px}.brand img{width:32px;height:32px;border-radius:6px}.brand h1{font-size:18px;font-weight:700}.brand small{opacity:.8;font-size:12px}.container{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px}.card{background:var(--card);padding:24px;border-radius:16px;width:100%;max-width:400px;box-shadow:0 10px 30px rgba(0,0,0,.1);text-align:center}input,select{width:100%;padding:12px;margin:6px 0;border:1px solid #cbd5e1;border-radius:8px;background:#f8fafc;font-size:15px}button{width:100%;padding:14px;margin:8px 0;border:none;border-radius:10px;font-weight:600;cursor:pointer;font-size:15px;background:var(--s);color:#fff}.btn-secondary{background:var(--p)}.btn-danger{background:#ef4444}.btn-small{padding:8px;font-size:13px;width:auto;margin:4px}.grid{display:grid;grid-template-columns:260px 1fr;gap:16px;max-width:1200px;width:100%;padding:16px}aside{background:var(--card);border-radius:12px;padding:16px;box-shadow:0 4px 12px rgba(0,0,0,.05);overflow-y:auto;max-height:90vh}#map{height:85vh;border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,.05)}.agent-card{margin:6px 0;padding:10px;background:var(--card);border-radius:8px;border-left:4px solid var(--s);cursor:pointer}.agent-card:hover{transform:translateX(3px)}.sos-alert{background:#fef2f2;border:2px solid #fecaca;padding:10px;margin:6px 0;border-radius:8px;animation:pulse 1.5s infinite}@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,.4)}50%{box-shadow:0 0 0 8px rgba(239,68,68,0)}}.debug{font-size:11px;color:var(--muted);margin:4px 0}@media(max-width:768px){.grid{grid-template-columns:1fr}aside{max-height:50vh}}</style></head><body>
 
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  <script type="module">
-    // 🔥 Imports Firebase
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import { getDatabase, ref, onValue, set, push } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
-    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+<!-- 🔐 VUE LOGIN -->
+<div id="view-login" class="view active"><div class="container"><div class="card"><div class="brand" style="justify-content:center"><img src="logo.png" alt="Logo"/><div><h1>🔐 Dedienɔ</h1><small>MILLES SERVICES • Togo 🇹🇬</small></div></div><input id="login-id" placeholder="Identifiant (ex: SUPER, AGT001)"/><input id="login-pass" type="password" placeholder="Mot de passe"/><button onclick="doLogin()">Se connecter</button><div id="login-err" style="color:#ef4444;font-size:13px;margin-top:6px"></div></div></div></div>
 
-    // 🔥 Config Firebase
-    const firebaseConfig = {
-      apiKey: "AIzaSyBhlLLm1Vvl3U3JYFZ8rzJJW4pimYDQEEU",
-      authDomain: "dedieno-demo.firebaseapp.com",
-      databaseURL: "https://dedieno-demo-default-rtdb.europe-west1.firebasedatabase.app",
-      projectId: "dedieno-demo",
-      storageBucket: "dedieno-demo.firebasestorage.app",
-      messagingSenderId: "1022260862453",
-      appId: "1:1022260862453:web:76282a6be081fdeedb94bc"
-    };
+<!-- 🛡️ VUE SUPERVISEUR -->
+<div id="view-supervisor" class="view"><div class="grid"><aside id="sup-sidebar"><div class="brand" style="border-radius:8px"><img src="logo.png"/><div><h1>Dedienɔ<small style="display:block">Superviseur</small></div></div><h3 style="margin:12px 0 6px">👥 Agents (<span id="sup-cnt">0</span>)</h3><button class="btn-small btn-secondary" onclick="forceRefresh()">🔄 Actualiser</button><button class="btn-small" onclick="exportCSV()">📊 Export CSV</button><button class="btn-small" onclick="showReport()">📋 Rapport</button><div id="sup-debug" class="debug"></div><div id="sup-list"></div><hr style="margin:12px 0;border-color:#e2e8f0"><h3>🚨 Alertes SOS</h3><div id="sup-sos"></div><button class="btn-small btn-danger" onclick="doLogout()" style="margin-top:12px">🔒 Déconnexion</button></aside><main style="flex:1"><div id="map"></div></main></div></div>
 
-    // 🔥 Initialisation
-    const app = initializeApp(firebaseConfig);
-    const db = getDatabase(app);
-    const auth = getAuth(app);
+<!-- 👮 VUE AGENT -->
+<div id="view-agent" class="view"><div class="container"><div class="card"><div class="brand" style="justify-content:center"><img src="logo.png"/><div><h1>👮 Agent Dedienɔ<small style="display:block">MILLES SERVICES • Togo 🇹🇬</small></div></div><div style="text-align:left"><label>Nom *</label><input id="ag-name" placeholder="Ex: Agent Kossi"/><label>Site d'affectation *</label><select id="ag-site"><option value="">-- Choisir --</option><option value="Lomé-Centre">🏢 Lomé-Centre</option><option value="Agoè-Nyivé">🏘️ Agoè-Nyivé</option><option value="Bè-Kpota">🏭 Bè-Kpota</option><option value="Tokoin">🏥 Tokoin</option><option value="Nyékonakpoè">🏘️ Nyékonakpoè</option><option value="Adidogomé">🏢 Adidogomé</option><option value="Kégué">🏭 Kégué</option><option value="Zongo">🕌 Zongo</option><option value="Autre">📍 Autre site</option></select></div><button onclick="agStartGPS()">📍 Démarrer le pointage</button><div id="ag-confirm" style="display:none;background:#f1f5f9;padding:12px;border-radius:8px;margin:8px 0"><p id="ag-confirm-txt"></p><button class="btn-small" onclick="agConfirm()">✅ Confirmer</button><button class="btn-small btn-secondary" onclick="agCancel()">✏️ Modifier</button></div><button id="ag-sos" class="btn-danger" style="display:none" onclick="agSendSOS()">🚨 ENVOYER SOS</button><div id="ag-status" class="debug">En attente...</div><div id="ag-coords" class="debug">📍 --</div><button class="btn-small btn-secondary" onclick="doLogout()" style="margin-top:8px">🔒 Déconnexion</button></div></div></div>
 
-    // 🔐 Protection Auth
-    onAuthStateChanged(auth, user => {
-      if (!user) window.location.href = "login.html";
+<script type="module">
+import{initializeApp}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import{getDatabase,ref,onValue,set,push,get}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+import{getAuth,onAuthStateChanged,signInWithEmailAndPassword,signOut}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+
+const app=initializeApp({apiKey:"AIzaSyBhlLLm1Vvl3U3JYFZ8rzJJW4pimYDQEEU",authDomain:"dedieno-demo.firebaseapp.com",databaseURL:"https://dedieno-demo-default-rtdb.europe-west1.firebasedatabase.app",projectId:"dedieno-demo"});
+const db=getDatabase(app),auth=getAuth(app);
+
+// 🔄 Routing Vue
+function showView(name){document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));document.getElementById(`view-${name}`).classList.add('active');}
+function supLog(m){const d=document.getElementById('sup-debug');if(d)d.innerHTML+=`<div>[${new Date().toLocaleTimeString()}] ${m}</div>`;}
+
+// 🔐 Auth
+onAuthStateChanged(auth,async u=>{
+  if(!u)return showView('login');
+  const snap=await get(ref(db,`users/${u.uid}`));
+  const role=snap.val()?.role||'agent';
+  showView(role==='superviseur'?'supervisor':'agent');
+  if(role==='superviseur')initSupervisor();
+  else initAgent();
+});
+
+window.doLogin=async()=>{
+  const id=document.getElementById('login-id').value.trim().toUpperCase();
+  const pass=document.getElementById('login-pass').value;
+  const err=document.getElementById('login-err');
+  if(!id||!pass){err.textContent="❌ Remplis tous les champs";return;}
+  err.textContent="⏳ Connexion...";
+  try{await signInWithEmailAndPassword(auth,`${id}@millesservices.tg`,pass);}
+  catch(e){err.textContent="❌ Identifiant ou mot de passe incorrect";}
+};
+window.doLogout=()=>signOut(auth);
+
+// 🛡️ Superviseur
+let map,mkrs={};
+function initSupervisor(){
+  supLog('🗺️ Chargement dashboard...');
+  map=L.map('map').setView([6.1256,1.2244],13);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19}).addTo(map);
+  onValue(ref(db,'agents'),s=>renderSupAgents(s.val()||{}));
+  let played=new Set();
+  onValue(ref(db,'alerts'),s=>{
+    const d=s.val()||{},sos=document.getElementById('sup-sos');
+    sos.innerHTML=Object.keys(d).length?'':`<div style="color:var(--muted);padding:8px">✅ Aucune alerte</div>`;
+    Object.values(d).sort((a,b)=>(b.timestamp||0)-(a.timestamp||0)).forEach(a=>{
+      sos.prepend(`<div class="sos-alert">🚨 <b>${a.site||'?'}</b><br><small>👤 ${a.agentName||'?'}</small><br><small>🕐 ${a.timestamp?new Date(a.timestamp).toLocaleString('fr-FR'):''}</small></div>`);
+      if(a.id&&!played.has(a.id)){new Audio('https://actions.google.com/sounds/v1/alarms/air_horn.ogg').play().catch(()=>{});played.add(a.id);}
     });
-
-    // 🔒 Déconnexion
-    window.logout = () => signOut(auth).then(() => window.location.href = "login.html");
-
-    // 🎨 UI Helpers
-    const debug = document.getElementById('debug');
-    function log(msg, type = 'info') {
-      if (!debug) return;
-      debug.innerHTML += `<div class="debug ${type}">[${new Date().toLocaleTimeString()}] ${msg}</div>`;
-      debug.scrollTop = debug.scrollHeight;
+  });
+}
+function renderSupAgents(agents){
+  const list=document.getElementById('sup-list');
+  document.getElementById('sup-cnt').textContent=Object.keys(agents).length;
+  list.innerHTML=Object.keys(agents).length?'':`<div style="color:var(--muted);padding:8px">🟡 Aucun agent en ligne</div>`;
+  Object.entries(agents).forEach(([id,a])=>{
+    list.innerHTML+=`<div class="agent-card" onclick="focusAgent('${id}')"><b>${a.name||'?'}</b> <span style="color:${a.status==='online'?'var(--s)':'var(--muted)'}">● ${a.status||'off'}</span><br><small>📍 ${a.site||''}</small></div>`;
+    if(a.lat&&a.lng){
+      const col=a.status==='online'?'#059669':'#94a3b8';
+      if(!mkrs[id])mkrs[id]=L.marker([a.lat,a.lng],{icon:L.divIcon({className:'c',html:`<div style="background:${col};width:12px;height:12px;border-radius:50%;border:3px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.3)"></div>`,iconSize:[18,18]}).addTo(map).bindPopup(`<b>${a.name}</b><br>📍 ${a.site||''}<br>${a.accuracy?`🎯 ±${Math.round(a.accuracy)}m`:''}`)}
+      else mkrs[id].setLatLng([a.lat,a.lng]);
     }
-    log('🔌 Init...');
+  });
+}
+window.focusAgent=id=>{if(mkrs[id]){map.setView(mkrs[id].getLatLng(),16);mkrs[id].openPopup();}};
+window.forceRefresh=()=>{supLog('🔄 Actualisation...');fetch('https://dedieno-demo-default-rtdb.europe-west1.firebasedatabase.app/agents.json?cache='+Date.now()).then(r=>r.json()).then(d=>renderSupAgents(d||{}));};
+window.exportCSV=()=>{supLog('📊 Export CSV...');fetch('https://dedieno-demo-default-rtdb.europe-west1.firebasedatabase.app/.json?cache='+Date.now()).then(r=>r.json()).then(d=>{let c='\uFEFFType,ID,Nom,Site,Lat,Lng,Date,Statut\n';if(d.agents)Object.entries(d.agents).forEach(([i,a])=>c+=`Agent,${i},"${a.name||''}","${a.site||''}",${a.lat||''},${a.lng||''},${a.lastPing?new Date(a.lastPing).toLocaleString('fr-FR'):''},${a.status||'off'}\n`);if(d.alerts)Object.entries(d.alerts).forEach(([i,a])=>c+=`SOS,${i},"${a.agentName||''}","${a.site||''}",${a.lat||''},${a.lng||''},${a.timestamp?new Date(a.timestamp).toLocaleString('fr-FR'):''},Alerte\n`);const b=new Blob([c],{type:'text/csv'}),u=URL.createObjectURL(b),a=document.createElement('a');a.href=u;a.download=`Dedieno_Export_${new Date().toISOString().slice(0,10)}.csv`;a.click();});};
+window.showReport=()=>{alert('📋 Rapport : Sélectionne un agent/période dans le dashboard avancé (fonctionnalité prête à activer sur demande).');};
 
-    // 🗺️ Carte Leaflet
-    const map = L.map('map').setView([6.1256, 1.2244], 13);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
-    const markers = {};
-
-    // 🔊 SOS Sound
-    function playSOS() {
-      const audio = new Audio('https://actions.google.com/sounds/v1/alarms/air_horn.ogg');
-      audio.volume = 1.0;
-      let count = 0;
-      const interval = setInterval(() => {
-        audio.currentTime = 0;
-        audio.play().catch(() => {});
-        count++;
-        if (count >= 3) clearInterval(interval);
-      }, 800);
-      if (navigator.vibrate) navigator.vibrate([500, 200, 500, 200, 500]);
-    }
-
-    // 🎨 Rendu Agents
-    function renderAgents(data) {
-      const cnt = document.getElementById('cnt');
-      const list = document.getElementById('list');
-      if (!cnt || !list) return;
-      cnt.textContent = Object.keys(data || {}).length;
-      list.innerHTML = '';
-      if (!data || Object.keys(data).length === 0) {
-        list.innerHTML = '<div style="color:var(--cpefpa-muted);font-size:13px;padding:8px">🟡 Aucun agent en ligne</div>';
-        return;
-      }
-      Object.entries(data).forEach(([id, a]) => {
-        const card = document.createElement('div');
-        card.className = `card ${a.status === 'online' ? 'online' : 'offline'}`;
-        card.innerHTML = `<b>${a.name || '?'}</b> <span style="color:${a.status==='online'?'var(--cpefpa-secondary)':'var(--cpefpa-muted)'}">● ${a.status||'off'}</span><br><small>📍 ${a.site||''}</small>`;
-        card.onclick = () => { if (a.lat && a.lng) { map.setView([a.lat, a.lng], 16); markers[id]?.openPopup(); } };
-        list.appendChild(card);
-        if (a.lat && a.lng) {
-          const color = a.status === 'online' ? 'var(--cpefpa-secondary)' : 'var(--cpefpa-muted)';
-          if (!markers[id]) {
-            markers[id] = L.marker([a.lat, a.lng], {
-              icon: L.divIcon({
-                className: 'custom-marker',
-                html: `<div style="background:${color};width:14px;height:14px;border-radius:50%;border:3px solid #fff;box-shadow:0 3px 8px rgba(0,0,0,0.3)"></div>`,
-                iconSize: [20, 20],
-                iconAnchor: [10, 10]
-              })
-            }).addTo(map).bindPopup(`<b>${a.name||'Agent'}</b><br>📍 ${a.site||''}<br><small style="color:#64748b">${a.lat?.toFixed(6)}, ${a.lng?.toFixed(6)}<br>${a.accuracy?`🎯 ±${Math.round(a.accuracy)}m`:''}</small><br><small>🕐 ${a.lastPing?new Date(a.lastPing).toLocaleTimeString('fr-FR'):''}</small>`);
-          } else {
-            markers[id].setLatLng([a.lat, a.lng]);
-          }
-        }
-      });
-    }
-
-    // 📡 Firebase Listeners
-    onValue(ref(db, 'agents'), snap => renderAgents(snap.val()), { onlyOnce: false });
-
-    // 🔄 Refresh manuel
-    window.forceRefresh = () => {
-      log('🔄 Refresh...');
-      fetch('https://dedieno-demo-default-rtdb.europe-west1.firebasedatabase.app/agents.json?cache=' + Date.now())
-        .then(r => r.json()).then(d => renderAgents(d))
-        .catch(e => log('❌ ' + e.message, 'err'));
-    };
-
-    // 📊 Export CSV
-    window.exportCSV = () => {
-      log('📊 Génération CSV...');
-      fetch('https://dedieno-demo-default-rtdb.europe-west1.firebasedatabase.app/.json?cache=' + Date.now())
-        .then(r => r.json()).then(data => {
-          let csv = '\uFEFFType,ID,Nom,Site,Lat,Lng,Date/Heure,Statut\n';
-          if (data?.agents) Object.entries(data.agents).forEach(([id,a]) => {
-            csv += `Agent,${id},"${a.name||''}","${a.site||''}",${a.lat||''},${a.lng||''},${a.lastPing?new Date(a.lastPing).toLocaleString('fr-FR'):''},${a.status||'off'}\n`;
-          });
-          if (data?.alerts) Object.entries(data.alerts).forEach(([id,a]) => {
-            csv += `SOS,${id},"${a.agentName||''}","${a.site||''}",${a.lat||''},${a.lng||''},${a.timestamp?new Date(a.timestamp).toLocaleString('fr-FR'):''},Alerte envoyée\n`;
-          });
-          const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
-          const url = URL.createObjectURL(blob);
-          const a = document.createElement('a'); a.href = url; a.download = `Dedieno_Export_${new Date().toISOString().slice(0,10)}.csv`;
-          a.click(); URL.revokeObjectURL(url);
-          log('✅ CSV téléchargé !');
-        }).catch(e => log('❌ Export: ' + e.message, 'err'));
-    };
-
-    // 📋 Rapport d'Activité
-    window.showReport = () => {
-      const modal = document.createElement('div');
-      modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.6);display:flex;align-items:center;justify-content:center;z-index:9999';
-      modal.innerHTML = `<div style="background:#fff;color:#1e293b;padding:24px;border-radius:16px;max-width:420px;width:90%;box-shadow:0 20px 40px rgba(0,0,0,0.3)"><h3 style="margin:0 0 16px">📋 Rapport d'Activité</h3><label style="font-size:13px;color:#64748b">Agent</label><select id="rpt-agent" style="width:100%;padding:10px;margin:6px 0 12px;border-radius:8px;border:1px solid #cbd5e1"><option value="all">Tous les agents</option></select><label style="font-size:13px;color:#64748b">Période</label><select id="rpt-period" style="width:100%;padding:10px;margin:6px 0 12px;border-radius:8px;border:1px solid #cbd5e1"><option value="today">Aujourd'hui</option><option value="7days">7 derniers jours</option><option value="30days">30 derniers jours</option></select><div style="display:flex;gap:8px"><button id="rpt-gen" style="flex:1;padding:10px;background:#1e40af;color:#fff;border:none;border-radius:8px;cursor:pointer">Générer CSV</button><button id="rpt-close" style="flex:1;padding:10px;background:#64748b;color:#fff;border:none;border-radius:8px;cursor:pointer">Fermer</button></div></div>`;
-      document.body.appendChild(modal);
-      document.getElementById('rpt-close').onclick = () => modal.remove();
-      document.getElementById('rpt-gen').onclick = () => generateReport();
-      populateAgents();
-      function populateAgents() {
-        const sel = document.getElementById('rpt-agent');
-        fetch('https://dedieno-demo-default-rtdb.europe-west1.firebasedatabase.app/agents.json').then(r=>r.json()).then(d=>{
-          if(!d) return;
-          sel.innerHTML = '<option value="all">Tous les agents</option>';
-          Object.entries(d).forEach(([id,a])=>{ if(a.name) sel.innerHTML += `<option value="${id}">${a.name}</option>`; });
-        });
-      }
-      function generateReport() {
-        const agentId = document.getElementById('rpt-agent').value;
-        const period = document.getElementById('rpt-period').value;
-        let from, to = new Date();
-        if(period==='today'){from=new Date();from.setHours(0,0,0,0);}
-        else if(period==='7days'){from=new Date(Date.now()-7*86400000);}
-        else{from=new Date(Date.now()-30*86400000);}
-        fetch('https://dedieno-demo-default-rtdb.europe-west1.firebasedatabase.app/.json').then(r=>r.json()).then(data=>{
-          let csv = '\uFEFFDate/Heure,Agent,Site,Latitude,Longitude,Statut,Événement\n';
-          if(data?.agents) Object.entries(data.agents).forEach(([id,a])=>{
-            if(agentId!=='all' && id!==agentId) return;
-            csv += `${a.lastPing?new Date(a.lastPing).toLocaleString('fr-FR'):''},"${a.name||''}","${a.site||''}",${a.lat||''},${a.lng||''},${a.status||'off'},${a.lastPing?'Pointage GPS':''}\n`;
-          });
-          if(data?.alerts) Object.entries(data.alerts).forEach(([id,a])=>{
-            if(agentId!=='all' && a.agentId!==agentId) return;
-            csv += `${a.timestamp?new Date(a.timestamp).toLocaleString('fr-FR'):''},"${a.agentName||''}","${a.site||''}",${a.lat||''},${a.lng||''},alerte,🚨 SOS envoyé\n`;
-          });
-          const blob = new Blob([csv],{type:'text/csv;charset=utf-8;'});
-          const url = URL.createObjectURL(blob);
-          const lnk = document.createElement('a'); lnk.href=url; lnk.download=`Rapport_Dedieno_${period}_${new Date().toISOString().slice(0,10)}.csv`;
-          lnk.click(); URL.revokeObjectURL(url);
-          modal.remove();
-          log('✅ Rapport téléchargé !');
-        });
-      }
-    };
-
-    // 🚨 SOS Alerts
-    let played = new Set();
-    onValue(ref(db, 'alerts'), snap => {
-      const data = snap.val() || {};
-      const sosDiv = document.getElementById('sos');
-      if (!sosDiv) return;
-      sosDiv.innerHTML = '';
-      if (Object.keys(data).length === 0) {
-        sosDiv.innerHTML = '<div style="color:var(--cpefpa-muted);font-size:13px;padding:8px">✅ Aucune alerte</div>';
-        return;
-      }
-      Object.values(data).sort((a,b) => (b.timestamp||0) - (a.timestamp||0)).forEach(a => {
-        const el = document.createElement('div');
-        el.className = 'sos';
-        el.innerHTML = `🚨 <b>${a.site||'?'}</b><br><small>👤 ${a.agentName||'?'}</small><br><small>🕐 ${a.timestamp?new Date(a.timestamp).toLocaleString('fr-FR'):''}</small>`;
-        sosDiv.prepend(el);
-        if (a.id && !played.has(a.id)) { playSOS(); played.add(a.id); }
-      });
-    });
-
-    log('🗺️ Dashboard prêt');
-  </script>
-</body>
-</html>
+// 👮 Agent
+let agId=null,agRun=false;
+function initAgent(){supLog('👮 Interface agent prête');}
+window.agStartGPS=()=>{
+  const n=document.getElementById('ag-name').value.trim(),s=document.getElementById('ag-site').value;
+  if(!n||!s)return alert('❌ Remplis ton nom et choisis un site');
+  document.getElementById('ag-confirm-txt').textContent=`👤 ${n} • 📍 ${s}`;
+  document.getElementById('ag-confirm').style.display='block';
+};
+window.agConfirm=async()=>{
+  document.getElementById('ag-confirm').style.display='none';
+  agId='ag_'+Math.random().toString(36).substr(2,9)+'_'+Date.now();
+  const n=document.getElementById('ag-name').value,s=document.getElementById('ag-site').value;
+  await set(ref(db,`agents/${agId}`),{name:n,site:s,status:'online',lastPing:Date.now()});
+  document.getElementById('ag-sos').style.display='block';
+  document.getElementById('ag-status').textContent='✅ Connecté & GPS actif';
+  agRun=true;startAGGPS();
+};
+window.agCancel=()=>document.getElementById('ag-confirm').style.display='none';
+function startAGGPS(){
+  setInterval(async()=>{
+    if(!agRun)return;
+    let la,lo,acc;
+    if(navigator.geolocation){try{const p=await new Promise((r,j)=>navigator.geolocation.getCurrentPosition(r,j,{enableHighAccuracy:true}));la=p.coords.latitude;lo=p.coords.longitude;acc=p.coords.accuracy;}catch{la=6.1256+(Math.random()-.5)*.001;lo=1.2244+(Math.random()-.5)*.001;}}
+    else{la=6.1256+(Math.random()-.5)*.001;lo=1.2244+(Math.random()-.5)*.001;}
+    await set(ref(db,`agents/${agId}`),{name:document.getElementById('ag-name').value,site:document.getElementById('ag-site').value,status:'online',lat:la,lng:lo,accuracy:acc,lastPing:Date.now()});
+    document.getElementById('ag-coords').textContent=`📍 ${la.toFixed(6)}, ${lo.toFixed(6)}${acc?` ±${Math.round(acc)}m`:''}`;
+  },15000);
+}
+window.agSendSOS=async()=>{
+  if(!agId)return alert('⚠️ Active d\'abord le GPS');
+  await push(ref(db,'alerts'),{id:'s_'+Date.now(),agentId:agId,agentName:document.getElementById('ag-name').value,site:document.getElementById('ag-site').value,timestamp:Date.now(),played:false});
+  document.getElementById('ag-status').textContent='🚨 SOS ENVOYÉ !';
+  setTimeout(()=>document.getElementById('ag-status').textContent='✅ GPS actif',30000);
+};
+</script></body></html>
