@@ -1,11 +1,10 @@
 ﻿<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/><title>📍 Dedienɔ</title>
 <link rel="icon" href="image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📍</text></svg>"/>
-<!-- ✅ Leaflet CSS + JS (ORDRE IMPORTANT) -->
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <style>
 :root{--p:#1e40af;--s:#059669;--a:#f59e0b;--bg:#f8fafc;--card:#fff;--txt:#1e293b;--muted:#64748b}
-*{box-sizing:border-box;margin:0;padding:0}body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--txt);min-height:100vh}.view{display:none}.view.active{display:flex;flex-direction:column;align-items:center;justify-content:center}.grid{display:grid;grid-template-columns:260px 1fr;gap:16px;min-height:100vh}aside{background:var(--card);border-right:1px solid #e2e8f0;overflow-y:auto;display:flex;flex-direction:column;padding:12px}#map{width:100%;height:100%;min-height:400px}.grid{height:100vh;overflow:hidden}main{height:100%;overflow:hidden}.brand{padding:12px 16px;background:linear-gradient(135deg,var(--p),var(--s));color:#fff;border-bottom:3px solid var(--a);display:flex;align-items:center;gap:10px}.brand img{width:32px;height:32px;border-radius:6px}.brand h1{font-size:18px;font-weight:700}.brand small{opacity:.8;font-size:12px}.agent-card{margin:6px 0;padding:10px;background:var(--card);border-radius:8px;border-left:4px solid var(--s);cursor:pointer}.agent-card:hover{transform:translateX(3px);box-shadow:0 4px 12px rgba(30,64,175,0.15)}.sos-alert{background:#fef2f2;border:2px solid #fecaca;padding:10px;margin:6px 0;border-radius:10px;animation:pulse 1.5s infinite}@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,.4)}50%{box-shadow:0 0 0 8px rgba(239,68,68,0)}}.debug{font-size:11px;color:var(--muted);margin:4px 0;max-height:80px;overflow-y:auto;background:#f1f5f9;padding:6px;border-radius:6px}.btn{padding:8px 16px;border:none;border-radius:8px;cursor:pointer;font-size:13px;font-weight:600;margin:4px 0;color:#fff;transition:0.2s}.btn-primary{background:var(--p)}.btn-secondary{background:var(--s)}.btn-danger{background:#ef4444}.btn:hover{transform:translateY(-2px)}
+*{box-sizing:border-box;margin:0;padding:0}body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--txt);min-height:100vh}.view{display:none;flex-direction:column;align-items:center;justify-content:center}.view.active{display:flex}.grid{display:grid;grid-template-columns:260px 1fr;height:100vh;gap:0}aside{background:var(--card);border-right:1px solid #e2e8f0;overflow-y:auto;display:flex;flex-direction:column;padding:12px}#map{width:100%;height:100%}.brand{padding:12px 16px;background:linear-gradient(135deg,var(--p),var(--s));color:#fff;border-bottom:3px solid var(--a);display:flex;align-items:center;gap:10px}.brand img{width:32px;height:32px;border-radius:6px}.brand h1{font-size:18px;font-weight:700}.brand small{opacity:.8;font-size:12px}.agent-card{margin:6px 0;padding:10px;background:var(--card);border-radius:8px;border-left:4px solid var(--s);cursor:pointer}.agent-card:hover{transform:translateX(3px);box-shadow:0 4px 12px rgba(30,64,175,0.15)}.sos-alert{background:#fef2f2;border:2px solid #fecaca;padding:10px;margin:6px 0;border-radius:10px;animation:pulse 1.5s infinite}@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,.4)}50%{box-shadow:0 0 0 8px rgba(239,68,68,0)}}.debug{font-size:11px;color:var(--muted);margin:4px 0;max-height:80px;overflow-y:auto;background:#f1f5f9;padding:6px;border-radius:6px}.btn{padding:8px 16px;border:none;border-radius:8px;cursor:pointer;font-size:13px;font-weight:600;margin:4px 0;color:#fff;transition:0.2s}.btn-primary{background:var(--p)}.btn-secondary{background:var(--s)}.btn-danger{background:#ef4444}.btn:hover{transform:translateY(-2px)}
 #view-login{background:linear-gradient(135deg,#1e40af,#059669);padding:20px}
 .login-card{background:#1e293b;padding:32px;border-radius:20px;max-width:380px;width:100%;text-align:center;box-shadow:0 20px 40px rgba(0,0,0,0.3);border:2px solid #1e40af;color:#fff}
 .login-card img{width:48px;height:48px;border-radius:10px;margin-bottom:12px}
@@ -27,7 +26,7 @@
 <div id="view-login" class="view active"><div class="login-card"><img src="logo.png" alt="Logo"/><h1>🔐 Dedienɔ</h1><small>MILLES SERVICES • Togo 🇹🇬</small><input id="login-id" placeholder="Identifiant (ex: SUPER, AGT001)"/><input id="login-pass" type="password" placeholder="Mot de passe"/><button id="btn-login">Se connecter</button><div id="login-err" class="login-err"></div></div></div>
 
 <!-- 🛡️ SUPERVISEUR -->
-<div id="view-supervisor" class="view" style="flex-direction:row"><div class="grid"><aside id="sup-sidebar"><div class="brand" style="border-radius:8px"><img src="logo.png"/><div><h1>Dedienɔ<small>Superviseur</small></div></div><h3 style="margin:12px 0 6px">👥 Agents (<span id="sup-cnt">0</span>)</h3><button class="btn btn-primary" id="btn-refresh">🔄 Actualiser</button><button class="btn btn-secondary" id="btn-csv">📊 Export CSV</button><button class="btn btn-secondary" id="btn-report">📋 Rapport</button><div id="sup-debug" class="debug"></div><div id="sup-list"></div><hr style="margin:12px 0;border-color:#e2e8f0"><h3>🚨 Alertes SOS</h3><div id="sup-sos"></div><button class="btn btn-danger" id="btn-logout">🔒 Déconnexion</button></aside><main style="flex:1"><div id="map"></div></main></div></div>
+<div id="view-supervisor" class="view"><div class="grid"><aside id="sup-sidebar"><div class="brand" style="border-radius:8px"><img src="logo.png"/><div><h1>Dedienɔ<small>Superviseur</small></div></div><h3 style="margin:12px 0 6px">👥 Agents (<span id="sup-cnt">0</span>)</h3><button class="btn btn-primary" id="btn-refresh">🔄 Actualiser</button><button class="btn btn-secondary" id="btn-csv">📊 Export CSV</button><button class="btn btn-secondary" id="btn-report">📋 Rapport</button><div id="sup-debug" class="debug"></div><div id="sup-list"></div><hr style="margin:12px 0;border-color:#e2e8f0"><h3>🚨 Alertes SOS</h3><div id="sup-sos"></div><button class="btn btn-danger" id="btn-logout">🔒 Déconnexion</button></aside><main style="height:100%;overflow:hidden"><div id="map"></div></main></div></div>
 
 <!-- 👮 AGENT -->
 <div id="view-agent" class="view"><div class="agent-panel"><div class="brand" style="justify-content:center;border-radius:8px;margin-bottom:16px;padding-bottom:16px;border-bottom:2px solid #f59e0b"><img src="logo.png"/><div><h1>👮 Agent Dedienɔ<small>MILLES SERVICES • Togo 🇹🇬</small></div></div><div style="text-align:left;margin-bottom:12px"><label style="font-size:13px;color:#94a3b8">Nom *</label><input id="ag-name" placeholder="Ex: Agent Kossi"/><label style="font-size:13px;color:#94a3b8">Site *</label><select id="ag-site"><option value="">-- Choisir --</option><option value="Lomé-Centre">🏢 Lomé-Centre</option><option value="Agoè-Nyivé">🏘️ Agoè-Nyivé</option><option value="Bè-Kpota">🏭 Bè-Kpota</option><option value="Tokoin">🏥 Tokoin</option><option value="Nyékonakpoè">🏘️ Nyékonakpoè</option><option value="Adidogomé">🏢 Adidogomé</option><option value="Kégué">🏭 Kégué</option><option value="Zongo">🕌 Zongo</option><option value="Autre">📍 Autre</option></select></div><button id="btn-gps" class="btn-green">📍 Démarrer le pointage</button><div id="ag-confirm" style="display:none;background:#334155;padding:12px;border-radius:10px;margin:8px 0"><p id="ag-confirm-txt" style="margin:0 0 8px"></p><button id="btn-confirm" style="background:#3b82f6;width:48%;margin-right:4%;padding:10px;border:none;border-radius:8px;color:#fff;cursor:pointer">✅ Confirmer</button><button id="btn-cancel" style="background:#64748b;width:48%;padding:10px;border:none;border-radius:8px;color:#fff;cursor:pointer">✏️ Modifier</button></div><button id="btn-sos" class="btn-red" style="display:none">🚨 ENVOYER SOS</button><div id="ag-status" style="margin-top:12px;padding:10px;background:#0f172a;border-radius:8px;font-size:13px;min-height:36px">En attente...</div><div id="ag-coords" style="margin-top:8px;font-family:monospace;font-size:12px;color:#64748b;padding:8px;background:#0f172a;border-radius:6px">📍 --</div><button id="btn-logout-ag" class="btn-gray">🔒 Déconnexion</button></div></div>
@@ -46,30 +45,40 @@ const app = initializeApp({
 const db = getDatabase(app);
 const auth = getAuth(app);
 
-function showView(name){if(name==='login'){document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));}const el=document.getElementById(iew-{name});if(el)el.classList.add('active');console.log(🎭 Vue affichée : {name});};showView('login');function showView2 {
+function showView(name) {
   document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
   const el = document.getElementById(`view-${name}`);
   if (el) el.classList.add('active');
 }
 
-// 🔐 Routing
-onAuthStateChanged(auth, async (user) => {await new Promise(r=>setTimeout(r,300));if(!user){console.log('🔐 Pas connecté → login');showView('login');return;}
-  if (!user) return showView('login');
+// 🔐 Routing sécurisé avec délai
+onAuthStateChanged(auth, async (user) => {
+  if (!user) {
+    showView('login');
+    return;
+  }
+  
+  // Petit délai pour laisser Firebase charger les données
+  await new Promise(res => setTimeout(res, 200));
+  
   try {
     const snap = await get(ref(db, `users/${user.uid}`));
     const data = snap.val();
-    let role = (data?.role || '').toString().trim().toLowerCase();
+    const role = (data?.role || '').toString().trim().toLowerCase();
+    
     if (role === 'superviseur') {
       showView('supervisor');
-      if (typeof initSupervisor === 'function') initSupervisor();
+      initSupervisor();
+    } else if (role === 'agent') {
+      showView('agent');
+      initAgent();
     } else {
-      console.warn('⚠️ Rôle inconnu → retour login');showView('login');
-      if (typeof initAgent === 'function') initAgent();
+      console.warn('⚠️ Rôle inconnu:', role, '→ Retour login');
+      showView('login');
     }
   } catch (err) {
     console.error('❌ Erreur lecture rôle:', err);
-    console.warn('⚠️ Rôle inconnu → retour login');showView('login');
-    if (typeof initAgent === 'function') initAgent();
+    showView('login');
   }
 });
 
@@ -102,15 +111,12 @@ document.querySelectorAll('[id*="btn-logout"]').forEach(btn => {
 // 🛡️ Superviseur
 let map = null, mkrs = {};
 function initSupervisor() {
-  // ✅ Vérifie que Leaflet est chargé AVANT d'utiliser L
-  if (typeof L === 'undefined') {
-    console.error('❌ Leaflet (L) non chargé. Recharge la page.');
-    return;
-  }
+  if (typeof L === 'undefined') return console.error('❌ Leaflet non chargé');
   if (!document.getElementById('map')) return;
   if (!map) {
     map = L.map('map').setView([6.1256, 1.2244], 13);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);setTimeout(()=>map.invalidateSize(),100);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
+    setTimeout(() => map.invalidateSize(), 100);
   }
   onValue(ref(db, 'agents'), (snap) => renderSupAgents(snap.val() || {}));
   let played = new Set();
@@ -144,9 +150,7 @@ function renderSupAgents(agents) {
     }
   });
 }
-document.getElementById('btn-refresh')?.addEventListener('click', () => {
-  fetch('https://dedieno-demo-default-rtdb.europe-west1.firebasedatabase.app/agents.json?cache=' + Date.now()).then(r => r.json()).then(d => renderSupAgents(d || {}));
-});
+document.getElementById('btn-refresh')?.addEventListener('click', () => fetch('https://dedieno-demo-default-rtdb.europe-west1.firebasedatabase.app/agents.json?cache=' + Date.now()).then(r => r.json()).then(d => renderSupAgents(d || {})));
 document.getElementById('btn-csv')?.addEventListener('click', () => {
   fetch('https://dedieno-demo-default-rtdb.europe-west1.firebasedatabase.app/.json?cache=' + Date.now()).then(r => r.json()).then(d => {
     let csv = '\uFEFFType,ID,Nom,Site,Lat,Lng,Date,Statut\n';
@@ -196,4 +200,3 @@ document.getElementById('btn-sos')?.addEventListener('click', async () => {
   setTimeout(() => document.getElementById('ag-status').textContent = '✅ GPS actif', 30000);
 });
 </script></body></html>
-
