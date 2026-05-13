@@ -1,4 +1,9 @@
-﻿<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/><title>📍 Dedienɔ</title><link rel="icon" href="image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📍</text></svg>"/><link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/><style>
+﻿<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/><title>📍 Dedienɔ</title>
+<link rel="icon" href="image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📍</text></svg>"/>
+<!-- ✅ Leaflet CSS + JS (ORDRE IMPORTANT) -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
 :root{--p:#1e40af;--s:#059669;--a:#f59e0b;--bg:#f8fafc;--card:#fff;--txt:#1e293b;--muted:#64748b}
 *{box-sizing:border-box;margin:0;padding:0}body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--txt);min-height:100vh}.view{display:none}.view.active{display:flex;flex-direction:column;align-items:center;justify-content:center}.grid{display:grid;grid-template-columns:260px 1fr;gap:16px;min-height:100vh}aside{background:var(--card);border-right:1px solid #e2e8f0;overflow-y:auto;display:flex;flex-direction:column;padding:12px}#map{height:100vh}.brand{padding:12px 16px;background:linear-gradient(135deg,var(--p),var(--s));color:#fff;border-bottom:3px solid var(--a);display:flex;align-items:center;gap:10px}.brand img{width:32px;height:32px;border-radius:6px}.brand h1{font-size:18px;font-weight:700}.brand small{opacity:.8;font-size:12px}.agent-card{margin:6px 0;padding:10px;background:var(--card);border-radius:8px;border-left:4px solid var(--s);cursor:pointer}.agent-card:hover{transform:translateX(3px);box-shadow:0 4px 12px rgba(30,64,175,0.15)}.sos-alert{background:#fef2f2;border:2px solid #fecaca;padding:10px;margin:6px 0;border-radius:10px;animation:pulse 1.5s infinite}@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,.4)}50%{box-shadow:0 0 0 8px rgba(239,68,68,0)}}.debug{font-size:11px;color:var(--muted);margin:4px 0;max-height:80px;overflow-y:auto;background:#f1f5f9;padding:6px;border-radius:6px}.btn{padding:8px 16px;border:none;border-radius:8px;cursor:pointer;font-size:13px;font-weight:600;margin:4px 0;color:#fff;transition:0.2s}.btn-primary{background:var(--p)}.btn-secondary{background:var(--s)}.btn-danger{background:#ef4444}.btn:hover{transform:translateY(-2px)}
 #view-login{background:linear-gradient(135deg,#1e40af,#059669);padding:20px}
@@ -45,40 +50,24 @@ function showView(name) {
   document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
   const el = document.getElementById(`view-${name}`);
   if (el) el.classList.add('active');
-  console.log(`🎭 Vue affichée : ${name}`);
 }
 
-// 🔐 Routing avec debug complet
+// 🔐 Routing
 onAuthStateChanged(auth, async (user) => {
-  console.log('🔌 Auth state changed:', user?.email || 'null');
-  if (!user) {
-    console.log('🔐 Pas connecté → afficher login');
-    return showView('login');
-  }
-  
-  console.log('👤 Utilisateur connecté:', user.email);
-  
+  if (!user) return showView('login');
   try {
     const snap = await get(ref(db, `users/${user.uid}`));
     const data = snap.val();
-    console.log('📦 Données Firebase:', data);
-    
-    // Lecture sécurisée du rôle (trim + toLowerCase pour éviter les erreurs)
     let role = (data?.role || '').toString().trim().toLowerCase();
-    console.log('🎭 Rôle détecté (normalisé):', role);
-    
     if (role === 'superviseur') {
-      console.log('✅ Redirection → Dashboard Superviseur');
       showView('supervisor');
       if (typeof initSupervisor === 'function') initSupervisor();
     } else {
-      console.log('✅ Redirection → Interface Agent (rôle:', role || 'non défini', ')');
       showView('agent');
       if (typeof initAgent === 'function') initAgent();
     }
   } catch (err) {
     console.error('❌ Erreur lecture rôle:', err);
-    // Fallback sécurisé : agent par défaut
     showView('agent');
     if (typeof initAgent === 'function') initAgent();
   }
@@ -89,247 +78,121 @@ const btnLogin = document.getElementById('btn-login');
 const loginId = document.getElementById('login-id');
 const loginPass = document.getElementById('login-pass');
 const loginErr = document.getElementById('login-err');
-
 if (btnLogin) {
   btnLogin.addEventListener('click', async () => {
     const id = loginId.value.trim().toUpperCase();
     const pass = loginPass.value;
     loginErr.textContent = '';
-    
-    if (!id || !pass) {
-      loginErr.textContent = '❌ Remplis tous les champs';
-      return;
-    }
-    
-    btnLogin.disabled = true;
-    btnLogin.textContent = '⏳ Connexion...';
-    console.log('🔍 Tentative connexion pour:', id);
-    
+    if (!id || !pass) { loginErr.textContent = '❌ Remplis tous les champs'; return; }
+    btnLogin.disabled = true; btnLogin.textContent = '⏳ Connexion...';
     try {
       await signInWithEmailAndPassword(auth, `${id}@millesservices.tg`, pass);
-      console.log('✅ Connexion réussie');
     } catch (e) {
-      console.error('❌ Erreur auth:', e.code, e.message);
       loginErr.textContent = '❌ Identifiant ou mot de passe incorrect';
-      btnLogin.disabled = false;
-      btnLogin.textContent = 'Se connecter';
+      btnLogin.disabled = false; btnLogin.textContent = 'Se connecter';
     }
   });
 }
 
 // 🔒 Logout
-const logoutButtons = document.querySelectorAll('[id*="btn-logout"]');
-logoutButtons.forEach(btn => {
-  btn.addEventListener('click', () => {
-    console.log('🔒 Déconnexion demandée');
-    signOut(auth);
-  });
+document.querySelectorAll('[id*="btn-logout"]').forEach(btn => {
+  btn.addEventListener('click', () => signOut(auth));
 });
 
-// 🛡️ Superviseur (déclaré avant usage)
-let map = null;
-let mkrs = {};
-
+// 🛡️ Superviseur
+let map = null, mkrs = {};
 function initSupervisor() {
-  console.log('🗺️ initSupervisor() appelé');
-  if (document.getElementById('map') && !map) {
+  // ✅ Vérifie que Leaflet est chargé AVANT d'utiliser L
+  if (typeof L === 'undefined') {
+    console.error('❌ Leaflet (L) non chargé. Recharge la page.');
+    return;
+  }
+  if (!document.getElementById('map')) return;
+  if (!map) {
     map = L.map('map').setView([6.1256, 1.2244], 13);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
   }
-  
-  const supDebug = document.getElementById('sup-debug');
-  function log(m) { if (supDebug) supDebug.innerHTML += `<div>[${new Date().toLocaleTimeString()}] ${m}</div>`; }
-  log('📡 Connexion Firebase...');
-  
-  onValue(ref(db, 'agents'), (snap) => {
-    const agents = snap.val() || {};
-    log(`✅ ${Object.keys(agents).length} agents reçus`);
-    renderSupAgents(agents);
-  });
-  
-  // SOS alerts
+  onValue(ref(db, 'agents'), (snap) => renderSupAgents(snap.val() || {}));
   let played = new Set();
   onValue(ref(db, 'alerts'), (snap) => {
-    const alerts = snap.val() || {};
-    const sosDiv = document.getElementById('sup-sos');
+    const alerts = snap.val() || {}, sosDiv = document.getElementById('sup-sos');
     if (!sosDiv) return;
-    
     sosDiv.innerHTML = Object.keys(alerts).length ? '' : `<div style="color:var(--muted);padding:8px">✅ Aucune alerte</div>`;
-    
     Object.values(alerts).sort((a,b) => (b.timestamp||0) - (a.timestamp||0)).forEach(a => {
       sosDiv.prepend(`<div class="sos-alert">🚨 <b>${a.site||'?'}</b><br><small>👤 ${a.agentName||'?'}</small><br><small>🕐 ${a.timestamp ? new Date(a.timestamp).toLocaleString('fr-FR') : ''}</small></div>`);
-      if (a.id && !played.has(a.id)) {
-        new Audio('https://actions.google.com/sounds/v1/alarms/air_horn.ogg').play().catch(()=>{});
-        played.add(a.id);
-      }
+      if (a.id && !played.has(a.id)) { new Audio('https://actions.google.com/sounds/v1/alarms/air_horn.ogg').play().catch(()=>{}); played.add(a.id); }
     });
   });
 }
-
 function renderSupAgents(agents) {
-  const list = document.getElementById('sup-list');
-  const cnt = document.getElementById('sup-cnt');
+  const list = document.getElementById('sup-list'), cnt = document.getElementById('sup-cnt');
   if (!list || !cnt) return;
-  
   cnt.textContent = Object.keys(agents).length;
   list.innerHTML = Object.keys(agents).length ? '' : `<div style="color:var(--muted);padding:8px">🟡 Aucun agent en ligne</div>`;
-  
   Object.entries(agents).forEach(([id, a]) => {
     const card = document.createElement('div');
     card.className = 'agent-card';
     card.innerHTML = `<b>${a.name||'?'}</b> <span style="color:${a.status==='online'?'var(--s)':'var(--muted)'}">● ${a.status||'off'}</span><br><small>📍 ${a.site||''}</small>`;
-    card.onclick = () => { if (mkrs[id] && a.lat && a.lng) { map.setView([a.lat, a.lng], 16); mkrs[id].openPopup(); } };
+    card.onclick = () => { if (mkrs[id] && a.lat && a.lng && map) { map.setView([a.lat, a.lng], 16); mkrs[id].openPopup(); } };
     list.appendChild(card);
-    
     if (a.lat && a.lng && map) {
       const col = a.status === 'online' ? '#059669' : '#94a3b8';
       if (!mkrs[id]) {
-        const icon = L.divIcon({
-          className: 'c',
-          html: `<div style="background:${col};width:12px;height:12px;border-radius:50%;border:3px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.3)"></div>`,
-          iconSize: [18, 18]
-        });
+        const icon = L.divIcon({ className: 'c', html: `<div style="background:${col};width:12px;height:12px;border-radius:50%;border:3px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.3)"></div>`, iconSize: [18, 18] });
         mkrs[id] = L.marker([a.lat, a.lng], { icon }).addTo(map).bindPopup(`<b>${a.name}</b><br>📍 ${a.site||''}<br>${a.accuracy ? `🎯 ±${Math.round(a.accuracy)}m` : ''}`);
-      } else {
-        mkrs[id].setLatLng([a.lat, a.lng]);
-      }
+      } else { mkrs[id].setLatLng([a.lat, a.lng]); }
     }
   });
 }
-
-// Boutons Superviseur
-const btnRefresh = document.getElementById('btn-refresh');
-if (btnRefresh) btnRefresh.addEventListener('click', () => {
-  const dbg = document.getElementById('sup-debug');
-  if (dbg) dbg.innerHTML += `<div>[${new Date().toLocaleTimeString()}] 🔄 Actualisation...</div>`;
-  fetch('https://dedieno-demo-default-rtdb.europe-west1.firebasedatabase.app/agents.json?cache=' + Date.now())
-    .then(r => r.json()).then(d => renderSupAgents(d || {}));
+document.getElementById('btn-refresh')?.addEventListener('click', () => {
+  fetch('https://dedieno-demo-default-rtdb.europe-west1.firebasedatabase.app/agents.json?cache=' + Date.now()).then(r => r.json()).then(d => renderSupAgents(d || {}));
 });
-
-const btnCsv = document.getElementById('btn-csv');
-if (btnCsv) btnCsv.addEventListener('click', () => {
-  console.log('📊 Export CSV...');
-  fetch('https://dedieno-demo-default-rtdb.europe-west1.firebasedatabase.app/.json?cache=' + Date.now())
-    .then(r => r.json()).then(d => {
-      let csv = '\uFEFFType,ID,Nom,Site,Lat,Lng,Date,Statut\n';
-      if (d?.agents) Object.entries(d.agents).forEach(([i,a]) => {
-        csv += `Agent,${i},"${a.name||''}","${a.site||''}",${a.lat||''},${a.lng||''},${a.lastPing ? new Date(a.lastPing).toLocaleString('fr-FR') : ''},${a.status||'off'}\n`;
-      });
-      if (d?.alerts) Object.entries(d.alerts).forEach(([i,a]) => {
-        csv += `SOS,${i},"${a.agentName||''}","${a.site||''}",${a.lat||''},${a.lng||''},${a.timestamp ? new Date(a.timestamp).toLocaleString('fr-FR') : ''},Alerte\n`;
-      });
-      const blob = new Blob([csv], {type:'text/csv'});
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a'); a.href = url; a.download = `Dedieno_Export_${new Date().toISOString().slice(0,10)}.csv`;
-      a.click(); URL.revokeObjectURL(url);
-    });
+document.getElementById('btn-csv')?.addEventListener('click', () => {
+  fetch('https://dedieno-demo-default-rtdb.europe-west1.firebasedatabase.app/.json?cache=' + Date.now()).then(r => r.json()).then(d => {
+    let csv = '\uFEFFType,ID,Nom,Site,Lat,Lng,Date,Statut\n';
+    if (d?.agents) Object.entries(d.agents).forEach(([i,a]) => csv += `Agent,${i},"${a.name||''}","${a.site||''}",${a.lat||''},${a.lng||''},${a.lastPing ? new Date(a.lastPing).toLocaleString('fr-FR') : ''},${a.status||'off'}\n`);
+    if (d?.alerts) Object.entries(d.alerts).forEach(([i,a]) => csv += `SOS,${i},"${a.agentName||''}","${a.site||''}",${a.lat||''},${a.lng||''},${a.timestamp ? new Date(a.timestamp).toLocaleString('fr-FR') : ''},Alerte\n`);
+    const blob = new Blob([csv], {type:'text/csv'}), url = URL.createObjectURL(blob), a = document.createElement('a');
+    a.href = url; a.download = `Dedieno_Export_${new Date().toISOString().slice(0,10)}.csv`; a.click();
+  });
 });
-
-const btnReport = document.getElementById('btn-report');
-if (btnReport) btnReport.addEventListener('click', () => alert('📋 Rapport : Fonctionnalité prête.'));
+document.getElementById('btn-report')?.addEventListener('click', () => alert('📋 Rapport : Fonctionnalité prête.'));
 
 // 👮 Agent
 let agId = null, agRun = false;
-
-function initAgent() {
-  console.log('👮 initAgent() appelé');
-}
-
-const btnGps = document.getElementById('btn-gps');
-if (btnGps) btnGps.addEventListener('click', () => {
-  const n = document.getElementById('ag-name')?.value.trim();
-  const s = document.getElementById('ag-site')?.value;
+function initAgent() {}
+document.getElementById('btn-gps')?.addEventListener('click', () => {
+  const n = document.getElementById('ag-name')?.value.trim(), s = document.getElementById('ag-site')?.value;
   if (!n || !s) return alert('❌ Remplis ton nom et choisis un site');
-  
-  const confirmTxt = document.getElementById('ag-confirm-txt');
-  const confirmBox = document.getElementById('ag-confirm');
-  if (confirmTxt && confirmBox) {
-    confirmTxt.textContent = `👤 ${n} • 📍 ${s}`;
-    confirmBox.style.display = 'block';
-  }
+  document.getElementById('ag-confirm-txt').textContent = `👤 ${n} • 📍 ${s}`;
+  document.getElementById('ag-confirm').style.display = 'block';
 });
-
-const btnConfirm = document.getElementById('btn-confirm');
-if (btnConfirm) btnConfirm.addEventListener('click', async () => {
-  const confirmBox = document.getElementById('ag-confirm');
-  if (confirmBox) confirmBox.style.display = 'none';
-  
+document.getElementById('btn-confirm')?.addEventListener('click', async () => {
+  document.getElementById('ag-confirm').style.display = 'none';
   agId = 'ag_' + Math.random().toString(36).substr(2, 9) + '_' + Date.now();
-  const n = document.getElementById('ag-name').value;
-  const s = document.getElementById('ag-site').value;
-  
+  const n = document.getElementById('ag-name').value, s = document.getElementById('ag-site').value;
   await set(ref(db, `agents/${agId}`), { name: n, site: s, status: 'online', lastPing: Date.now() });
-  
-  const sosBtn = document.getElementById('btn-sos');
-  const statusDiv = document.getElementById('ag-status');
-  if (sosBtn) sosBtn.style.display = 'block';
-  if (statusDiv) statusDiv.textContent = '✅ Connecté & GPS actif';
-  
-  agRun = true;
-  startAGGPS();
+  document.getElementById('btn-sos').style.display = 'block';
+  document.getElementById('ag-status').textContent = '✅ Connecté & GPS actif';
+  agRun = true; startAGGPS();
 });
-
-const btnCancel = document.getElementById('btn-cancel');
-if (btnCancel) btnCancel.addEventListener('click', () => {
-  const confirmBox = document.getElementById('ag-confirm');
-  if (confirmBox) confirmBox.style.display = 'none';
-});
-
+document.getElementById('btn-cancel')?.addEventListener('click', () => document.getElementById('ag-confirm').style.display = 'none');
 function startAGGPS() {
   setInterval(async () => {
     if (!agRun) return;
     let la, lo, acc;
-    
     if (navigator.geolocation) {
-      try {
-        const p = await new Promise((res, rej) => 
-          navigator.geolocation.getCurrentPosition(res, rej, { enableHighAccuracy: true, timeout: 10000 })
-        );
-        la = p.coords.latitude; lo = p.coords.longitude; acc = p.coords.accuracy;
-      } catch {
-        la = 6.1256 + (Math.random() - 0.5) * 0.001;
-        lo = 1.2244 + (Math.random() - 0.5) * 0.001;
-      }
-    } else {
-      la = 6.1256 + (Math.random() - 0.5) * 0.001;
-      lo = 1.2244 + (Math.random() - 0.5) * 0.001;
-    }
-    
-    await set(ref(db, `agents/${agId}`), {
-      name: document.getElementById('ag-name')?.value,
-      site: document.getElementById('ag-site')?.value,
-      status: 'online',
-      lat: la, lng: lo,
-      accuracy: acc,
-      lastPing: Date.now()
-    });
-    
-    const coordsDiv = document.getElementById('ag-coords');
-    if (coordsDiv) {
-      coordsDiv.textContent = `📍 ${la.toFixed(6)}, ${lo.toFixed(6)}${acc ? ` ±${Math.round(acc)}m` : ''}`;
-    }
+      try { const p = await new Promise((res, rej) => navigator.geolocation.getCurrentPosition(res, rej, { enableHighAccuracy: true, timeout: 10000 })); la = p.coords.latitude; lo = p.coords.longitude; acc = p.coords.accuracy; }
+      catch { la = 6.1256 + (Math.random() - 0.5) * 0.001; lo = 1.2244 + (Math.random() - 0.5) * 0.001; }
+    } else { la = 6.1256 + (Math.random() - 0.5) * 0.001; lo = 1.2244 + (Math.random() - 0.5) * 0.001; }
+    await set(ref(db, `agents/${agId}`), { name: document.getElementById('ag-name')?.value, site: document.getElementById('ag-site')?.value, status: 'online', lat: la, lng: lo, accuracy: acc, lastPing: Date.now() });
+    document.getElementById('ag-coords').textContent = `📍 ${la.toFixed(6)}, ${lo.toFixed(6)}${acc ? ` ±${Math.round(acc)}m` : ''}`;
   }, 15000);
 }
-
-const btnSos = document.getElementById('btn-sos');
-if (btnSos) btnSos.addEventListener('click', async () => {
+document.getElementById('btn-sos')?.addEventListener('click', async () => {
   if (!agId) return alert('⚠️ Active d\'abord le GPS');
-  
-  await push(ref(db, 'alerts'), {
-    id: 's_' + Date.now(),
-    agentId: agId,
-    agentName: document.getElementById('ag-name')?.value,
-    site: document.getElementById('ag-site')?.value,
-    timestamp: Date.now(),
-    played: false
-  });
-  
-  const statusDiv = document.getElementById('ag-status');
-  if (statusDiv) {
-    statusDiv.textContent = '🚨 SOS ENVOYÉ !';
-    setTimeout(() => { if (statusDiv) statusDiv.textContent = '✅ GPS actif'; }, 30000);
-  }
+  await push(ref(db, 'alerts'), { id: 's_' + Date.now(), agentId: agId, agentName: document.getElementById('ag-name')?.value, site: document.getElementById('ag-site')?.value, timestamp: Date.now(), played: false });
+  document.getElementById('ag-status').textContent = '🚨 SOS ENVOYÉ !';
+  setTimeout(() => document.getElementById('ag-status').textContent = '✅ GPS actif', 30000);
 });
-
-console.log('🚀 Application chargée');
 </script></body></html>
