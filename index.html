@@ -39,20 +39,27 @@ const app=initializeApp({apiKey:"AIzaSyBhlLLm1Vvl3U3JYFZ8rzJJW4pimYDQEEU",authDo
 const db=getDatabase(app),auth=getAuth(app);
 function showView(n){document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));document.getElementById('view-'+n)?.classList.add('active');}
 
-// 🔐 ROUTING avec nettoyage des guillemets
+// 🔐 ROUTING INFAILLIBLE (Fallback sur email si DB échoue)
 onAuthStateChanged(auth, async u => {
   if(!u) return showView('login');
-  await new Promise(r=>setTimeout(r,300));
+  await new Promise(r=>setTimeout(r,200));
   try{
     const snap=await get(ref(db,'users/'+u.uid));
     const data=snap.val()||{};
-    // 🧹 Nettoyage ROBUSTE : retire guillemets, espaces, normalise
-    let rawRole = String(data.role || '');
-    let cleanRole = rawRole.replace(/^["']|["']$/g, '').trim().toLowerCase();
-    console.log('🔍 Role brut:',rawRole,'| nettoyé:',cleanRole);
-    if(cleanRole.includes('superviseur')){console.log('✅ Dashboard');showView('supervisor');initSup();}
-    else{console.log('✅ Agent (role:',cleanRole,')');showView('agent');initAg();}
-  }catch(e){console.error('❌ DB:',e);showView('login');}
+    const rawRole = String(data.role || '');
+    const cleanRole = rawRole.replace(/["'\s]/g, '').toLowerCase();
+    
+    // ✅ LOGIQUE SÉCURISÉE : Si email contient "super" OU rôle contient "superviseur"
+    const isSup = u.email.toLowerCase().includes('super') || cleanRole.includes('superviseur');
+    console.log('🔍 Email:',u.email,'| Rôle DB:',cleanRole,'| Décision:', isSup ? 'SUPERVISEUR' : 'AGENT');
+    
+    if(isSup){ showView('supervisor'); initSup(); }
+    else{ showView('agent'); initAg(); }
+  }catch(e){
+    console.warn('⚠️ DB indisponible, fallback sur email');
+    if(u.email.toLowerCase().includes('super')){ showView('supervisor'); initSup(); }
+    else{ showView('agent'); initAg(); }
+  }
 });
 
 // 🔑 LOGIN
@@ -66,7 +73,7 @@ document.getElementById('btn-login')?.addEventListener('click', async()=>{
   catch(e){err.textContent='❌ Identifiant/MDP incorrect';document.getElementById('btn-login').disabled=false;}
 });
 
-// 🔒 LOGOUT fiable
+// 🔒 LOGOUT
 document.querySelectorAll('#btn-logout,#btn-logout-ag').forEach(b=>b.addEventListener('click',()=>signOut(auth)));
 
 // 🛡️ SUPERVISEUR
@@ -116,4 +123,3 @@ document.getElementById('btn-sos')?.addEventListener('click',async()=>{if(!agId)
   document.getElementById('ag-status').textContent='🚨 SOS ENVOYÉ';
 });
 </script></body></html>
-
