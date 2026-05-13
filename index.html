@@ -27,39 +27,37 @@
 .agent-panel input,.agent-panel select{width:100%;padding:12px;margin:6px 0;border-radius:10px;border:1px solid #334155;background:#0f172a;color:#fff}
 .agent-panel button{width:100%;padding:14px;margin:10px 0;border:none;border-radius:12px;font-weight:600;cursor:pointer;color:#fff}
 .agent-panel .btn-green{background:#22c55e}.agent-panel .btn-red{background:#ef4444}.agent-panel .btn-gray{background:#64748b}
+@media(max-width:768px){.grid{grid-template-columns:1fr}aside{max-height:65vh;overflow-y:auto;border-right:none;border-bottom:1px solid #e2e8f0}#btn-logout,#btn-logout-ag{margin-top:auto;width:100%;display:block}}
 </style></head><body>
 <div id="view-login" class="view active"><div class="login-card"><img src="logo.png"/><h1>🔐 Dedienɔ</h1><small>MILLES SERVICES • Togo 🇹🇬</small><input id="login-id" placeholder="Identifiant (ex: SUPER, AGT001)"/><input id="login-pass" type="password" placeholder="Mot de passe"/><button id="btn-login">Se connecter</button><div id="login-err" class="login-err"></div></div></div>
 <div id="view-supervisor" class="view"><div class="grid"><aside id="sup-sidebar"><div class="brand"><img src="logo.png"/><div><h1>Dedienɔ<small>Superviseur</small></div></div><h3>👥 Agents (<span id="sup-cnt">0</span>)</h3><button class="btn btn-primary" id="btn-refresh">🔄 Actualiser</button><button class="btn btn-secondary" id="btn-csv">📊 Export CSV</button><div id="sup-debug" class="debug"></div><div id="sup-list"></div><hr><h3>🚨 Alertes SOS</h3><div id="sup-sos"></div><button class="btn btn-danger" id="btn-logout">🔒 Déconnexion</button></aside><main style="height:100%;overflow:hidden"><div id="map"></div></main></div></div>
 <div id="view-agent" class="view"><div class="agent-panel"><div class="brand"><img src="logo.png"/><h1>👮 Agent Dedienɔ<small>MILLES SERVICES</small></h1></div><input id="ag-name" placeholder="Nom *"/><select id="ag-site"><option value="">-- Choisir --</option><option value="Lomé-Centre">🏢 Lomé-Centre</option><option value="Agoè-Nyivé">🏘️ Agoè-Nyivé</option><option value="Bè-Kpota">🏭 Bè-Kpota</option><option value="Tokoin">🏥 Tokoin</option><option value="Nyékonakpoè">🏘️ Nyékonakpoè</option><option value="Adidogomé">🏢 Adidogomé</option><option value="Kégué">🏭 Kégué</option><option value="Zongo">🕌 Zongo</option><option value="Autre">📍 Autre</option></select><button id="btn-gps" class="btn-green">📍 Pointage</button><button id="btn-sos" class="btn-red" style="display:none">🚨 SOS</button><div id="ag-status" style="margin-top:10px;padding:8px;background:#0f172a;border-radius:6px">En attente...</div><button id="btn-logout-ag" class="btn-gray">🔒 Déconnexion</button></div></div>
+
 <script type="module">
 import{initializeApp}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import{getDatabase,ref,onValue,set,push,get}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 import{getAuth,onAuthStateChanged,signInWithEmailAndPassword,signOut}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 const app=initializeApp({apiKey:"AIzaSyBhlLLm1Vvl3U3JYFZ8rzJJW4pimYDQEEU",authDomain:"dedieno-demo.firebaseapp.com",databaseURL:"https://dedieno-demo-default-rtdb.europe-west1.firebasedatabase.app",projectId:"dedieno-demo"});
 const db=getDatabase(app),auth=getAuth(app);
-function showView(n){document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));document.getElementById('view-'+n)?.classList.add('active');}
 
-// 🔐 ROUTING INFAILLIBLE (Fallback sur email si DB échoue)
+let currentView = null, map = null, mkrs = {};
+function showView(n){document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));document.getElementById('view-'+n)?.classList.add('active');currentView=n;}
+
+// 🔐 ROUTING SÉCURISÉ (Anti-crash + Fallback Email)
 onAuthStateChanged(auth, async u => {
   if(!u) return showView('login');
-  await new Promise(r=>setTimeout(r,200));
-  try{
-    const snap=await get(ref(db,'users/'+u.uid));
-    const data=snap.val()||{};
-    const rawRole = String(data.role || '');
-    const cleanRole = rawRole.replace(/["'\s]/g, '').toLowerCase();
-    
-    // ✅ LOGIQUE SÉCURISÉE : Si email contient "super" OU rôle contient "superviseur"
-    const isSup = u.email.toLowerCase().includes('super') || cleanRole.includes('superviseur');
-    console.log('🔍 Email:',u.email,'| Rôle DB:',cleanRole,'| Décision:', isSup ? 'SUPERVISEUR' : 'AGENT');
-    
-    if(isSup){ showView('supervisor'); initSup(); }
-    else{ showView('agent'); initAg(); }
-  }catch(e){
+  let isSup = false;
+  try {
+    const snap = await get(ref(db, 'users/'+u.uid));
+    const role = String(snap.val()?.role || '').toLowerCase();
+    if(role.includes('superviseur')) isSup = true;
+  } catch(e) {
     console.warn('⚠️ DB indisponible, fallback sur email');
-    if(u.email.toLowerCase().includes('super')){ showView('supervisor'); initSup(); }
-    else{ showView('agent'); initAg(); }
   }
+  if (!isSup && u.email.toLowerCase().includes('super')) isSup = true;
+
+  showView(isSup ? 'supervisor' : 'agent');
+  if (isSup) initSup();
 });
 
 // 🔑 LOGIN
@@ -76,21 +74,25 @@ document.getElementById('btn-login')?.addEventListener('click', async()=>{
 // 🔒 LOGOUT
 document.querySelectorAll('#btn-logout,#btn-logout-ag').forEach(b=>b.addEventListener('click',()=>signOut(auth)));
 
-// 🛡️ SUPERVISEUR
-let map=null,mkrs={};
+// 🛡️ SUPERVISEUR (Map protégée anti-double-init)
 function initSup(){
-  if(typeof L==='undefined')return;
-  map=L.map('map').setView([6.1256,1.2244],13);
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19}).addTo(map);
-  setTimeout(()=>map.invalidateSize(),100);
+  if(typeof L==='undefined') return;
+  if(map) { map.invalidateSize(); return; } // ✅ Empêche l'erreur "already initialized"
+  
+  setTimeout(()=>{
+    if(!document.getElementById('map')) return;
+    map = L.map('map').setView([6.1256,1.2244],13);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19}).addTo(map);
+  },150);
+
   onValue(ref(db,'agents'),s=>{
     const a=s.val()||{};document.getElementById('sup-cnt').textContent=Object.keys(a).length;
     const l=document.getElementById('sup-list');l.innerHTML='';
     Object.entries(a).forEach(([id,x])=>{
       const c=document.createElement('div');c.className='agent-card';
       c.innerHTML='<b>'+(x.name||'?')+'</b> <span style="color:'+(x.status==='online'?'#059669':'#64748b')+'">● '+(x.status||'off')+'</span>';
-      c.onclick=()=>{if(mkrs[id]&&x.lat)map.setView([x.lat,x.lng],16);};l.appendChild(c);
-      if(x.lat&&x.lng){const col=x.status==='online'?'#059669':'#94a3b8';
+      c.onclick=()=>{if(mkrs[id]&&x.lat&&map)map.setView([x.lat,x.lng],16);};l.appendChild(c);
+      if(x.lat&&x.lng&&map){const col=x.status==='online'?'#059669':'#94a3b8';
         if(!mkrs[id])mkrs[id]=L.marker([x.lat,x.lng],{icon:L.divIcon({html:'<div style="background:'+col+';width:12px;height:12px;border-radius:50%;border:3px solid #fff"></div>',iconSize:[18,18]})}).addTo(map);
         else mkrs[id].setLatLng([x.lat,x.lng]);}
     });
@@ -100,7 +102,7 @@ function initSup(){
     Object.values(d).sort((a,b)=>(b.timestamp||0)-(a.timestamp||0)).forEach(a=>sos.prepend('<div class="sos-alert">🚨 '+(a.site||'?')+'</div>'));
   });
 }
-document.getElementById('btn-refresh')?.addEventListener('click',()=>initSup());
+document.getElementById('btn-refresh')?.addEventListener('click',()=>{if(map)map.invalidateSize();initSup();});
 document.getElementById('btn-csv')?.addEventListener('click',()=>alert('📊 Export CSV...'));
 
 // 👮 AGENT
@@ -123,4 +125,3 @@ document.getElementById('btn-sos')?.addEventListener('click',async()=>{if(!agId)
   document.getElementById('ag-status').textContent='🚨 SOS ENVOYÉ';
 });
 </script></body></html>
-
