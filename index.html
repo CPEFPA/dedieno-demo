@@ -14,9 +14,7 @@
 .agent-card:hover{transform:translateX(3px);box-shadow:0 4px 12px rgba(30,64,175,0.15)}
 .sos-alert{background:#fff;border-left:4px solid #ef4444;padding:12px;margin:8px 0;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,0.1)}
 .sos-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
-.sos-site{font-weight:700;color:#1e40af}
-.sos-time{font-size:11px;color:#64748b}
-.sos-agent{font-size:13px;color:#334155}
+.sos-site{font-weight:700;color:#1e40af}.sos-time{font-size:11px;color:#64748b}.sos-agent{font-size:13px;color:#334155}
 .sos-actions{display:flex;gap:8px;margin-top:6px}
 .btn-resolved{background:#dcfce7;color:#166534;border:none;padding:6px 10px;border-radius:6px;cursor:pointer;font-size:12px;font-weight:600}
 .debug{font-size:11px;color:var(--muted);margin:4px 0;max-height:80px;overflow-y:auto;background:#f1f5f9;padding:6px;border-radius:6px}
@@ -35,17 +33,20 @@
 .agent-panel .btn-green{background:#22c55e}.agent-panel .btn-red{background:#ef4444}.agent-panel .btn-gray{background:#64748b}
 .modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.6);display:none;align-items:center;justify-content:center;z-index:1000}
 .modal-overlay.active{display:flex}
-.modal{background:#fff;padding:24px;border-radius:16px;max-width:520px;width:90%;max-height:85vh;overflow-y:auto;box-shadow:0 10px 30px rgba(0,0,0,0.2)}
+.modal{background:#fff;padding:24px;border-radius:16px;max-width:540px;width:90%;max-height:85vh;overflow-y:auto;box-shadow:0 10px 30px rgba(0,0,0,0.2)}
 .modal h2{margin-bottom:16px;color:#1e40af;text-align:center}
-.wizard-container{display:flex;flex-direction:column;gap:12px}
-.wizard-step{background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:14px}
-.step-header{display:flex;align-items:center;gap:10px;margin-bottom:8px}
-.step-badge{background:#1e40af;color:#fff;width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px}
-.action-btn{width:100%;padding:10px;background:#1e40af;color:#fff;border:none;border-radius:8px;cursor:pointer;font-weight:600;font-size:14px;transition:0.2s}
-.action-btn:hover{background:#1e3a8a;transform:translateY(-1px)}
-.action-btn.secondary{background:#059669}
-.action-btn.secondary:hover{background:#047857}
-.tpl-box{width:100%;padding:10px;background:#0f172a;color:#22c55e;font-family:monospace;font-size:13px;border:1px solid #334155;border-radius:6px;resize:none;margin-bottom:8px}
+.tabs{display:flex;gap:8px;margin-bottom:16px;border-bottom:2px solid #e2e8f0;padding-bottom:8px}
+.tab{flex:1;padding:10px;border:none;background:#f1f5f9;border-radius:8px;cursor:pointer;font-weight:600;color:#64748b;transition:0.2s}
+.tab.active{background:#1e40af;color:#fff}
+.tab-content{display:none}.tab-content.active{display:block}
+.form-group{margin-bottom:12px}
+.form-group label{display:block;margin-bottom:6px;font-size:13px;color:#334155;font-weight:600}
+.form-group input,.form-group select{width:100%;padding:10px;border:1px solid #cbd5e1;border-radius:8px;font-size:14px}
+.csv-upload{border:2px dashed #cbd5e1;padding:20px;text-align:center;border-radius:10px;cursor:pointer}
+.csv-upload:hover{border-color:#1e40af;background:#f8fafc}
+.status-box{margin-top:12px;padding:10px;background:#f1f5f9;border-radius:8px;font-size:13px;max-height:120px;overflow-y:auto}
+.status-box.success{background:#dcfce7;color:#166534}
+.status-box.error{background:#fef2f2;color:#991b1b}
 .modal-close{margin-top:16px;width:100%;background:#64748b;color:#fff;padding:10px;border:none;border-radius:8px;cursor:pointer;font-weight:600}
 .stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:12px 0}
 .stat-card{background:#f8fafc;padding:12px;border-radius:8px;text-align:center;border:1px solid #e2e8f0}
@@ -54,8 +55,33 @@
 @media(max-width:768px){.grid{grid-template-columns:1fr}aside{max-height:65vh;overflow-y:auto;border-right:none;border-bottom:1px solid #e2e8f0}#btn-logout,#btn-logout-ag{margin-top:auto;width:100%;display:block}}
 </style></head><body>
 <div id="view-login" class="view active"><div class="login-card"><img src="logo.png"/><h1>🔐 Dedienɔ</h1><small>MILLES SERVICES • Togo 🇹🇬</small><input id="login-id" placeholder="Identifiant (ex: SUPER, AGT001)"/><input id="login-pass" type="password" placeholder="Mot de passe"/><button id="btn-login">Se connecter</button><div id="login-err" class="login-err"></div></div></div>
-<div id="view-supervisor" class="view"><div class="grid"><aside id="sup-sidebar"><div class="brand"><img src="logo.png"/><div><h1>Dedienɔ<small>Superviseur</small></div></div><h3>👥 Agents (<span id="sup-cnt">0</span>)</h3><button class="btn btn-primary" id="btn-refresh">🔄 Actualiser</button><button class="btn btn-secondary" id="btn-csv">📊 Export CSV</button><button class="btn btn-secondary" id="btn-report">📋 Rapport</button><button class="btn btn-warning" id="btn-add-guide">➕ Ajouter Compte</button><div id="sup-debug" class="debug"></div><div id="sup-list"></div><hr><h3>🚨 Alertes SOS</h3><div id="sup-sos"></div><button class="btn btn-danger" id="btn-logout">🔒 Déconnexion</button></aside><main style="height:100%;overflow:hidden"><div id="map"></div></main></div></div>
+<div id="view-supervisor" class="view"><div class="grid"><aside id="sup-sidebar"><div class="brand"><img src="logo.png"/><div><h1>Dedienɔ<small>Superviseur</small></div></div><h3>👥 Agents (<span id="sup-cnt">0</span>)</h3><button class="btn btn-primary" id="btn-refresh">🔄 Actualiser</button><button class="btn btn-secondary" id="btn-csv">📊 Export CSV</button><button class="btn btn-secondary" id="btn-report">📋 Rapport</button><button class="btn btn-warning" id="btn-manage">👥 Gestion des Comptes</button><div id="sup-debug" class="debug"></div><div id="sup-list"></div><hr><h3>🚨 Alertes SOS</h3><div id="sup-sos"></div><button class="btn btn-danger" id="btn-logout">🔒 Déconnexion</button></aside><main style="height:100%;overflow:hidden"><div id="map"></div></main></div></div>
 <div id="view-agent" class="view"><div class="agent-panel"><div class="brand"><img src="logo.png"/><h1>👮 Agent Dedienɔ<small>MILLES SERVICES</small></h1></div><input id="ag-name" placeholder="Nom *"/><select id="ag-site"><option value="">-- Choisir --</option><option value="Lomé-Centre">🏢 Lomé-Centre</option><option value="Agoè-Nyivé">🏘️ Agoè-Nyivé</option><option value="Bè-Kpota">🏭 Bè-Kpota</option><option value="Tokoin">🏥 Tokoin</option><option value="Nyékonakpoè">🏘️ Nyékonakpoè</option><option value="Adidogomé">🏢 Adidogomé</option><option value="Kégué">🏭 Kégué</option><option value="Zongo">🕌 Zongo</option><option value="Autre">📍 Autre</option></select><button id="btn-gps" class="btn-green">📍 Démarrer le pointage</button><div id="ag-status" style="margin-top:10px;padding:8px;background:#0f172a;border-radius:6px">En attente...</div><button id="btn-sos" class="btn-red" style="display:none">🚨 SOS</button><button id="btn-logout-ag" class="btn-gray">🔒 Déconnexion</button></div></div>
+
+<div id="modal-manage" class="modal-overlay"><div class="modal">
+  <h2>👥 Gestion des Comptes</h2>
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('manual')">➕ Formulaire</button>
+    <button class="tab" onclick="switchTab('csv')">📥 Import CSV</button>
+  </div>
+  <div id="tab-manual" class="tab-content active">
+    <div class="form-group"><label>Email (@millesservices.tg)</label><input id="m-email" placeholder="ex: agt002"></div>
+    <div class="form-group"><label>Mot de passe</label><input id="m-pass" type="password" placeholder="Temp2026!"></div>
+    <div class="form-group"><label>Nom complet</label><input id="m-name" placeholder="Koffi Mensah"></div>
+    <div class="form-group"><label>Rôle</label><select id="m-role"><option value="agent">👮 Agent</option><option value="superviseur">🛡️ Superviseur</option></select></div>
+    <div class="form-group"><label>Site d'affectation</label><select id="m-site"><option value="Lomé-Centre">Lomé-Centre</option><option value="Agoè-Nyivé">Agoè-Nyivé</option><option value="Bè-Kpota">Bè-Kpota</option><option value="Tokoin">Tokoin</option><option value="Nyékonakpoè">Nyékonakpoè</option><option value="Adidogomé">Adidogomé</option><option value="Kégué">Kégué</option><option value="Zongo">Zongo</option><option value="Autre">Autre</option></select></div>
+    <button class="action-btn" style="width:100%;padding:12px;background:#1e40af;color:#fff;border:none;border-radius:8px;cursor:pointer;font-weight:600" onclick="createManual()">✅ Créer le compte</button>
+    <div id="m-status" class="status-box" style="display:none"></div>
+  </div>
+  <div id="tab-csv" class="tab-content">
+    <p style="margin-bottom:10px;font-size:13px;color:#64748b">📄 Format CSV attendu : <code>email,password,name,role,site</code> (sans guillemets, sans en-tête)</p>
+    <div class="csv-upload" onclick="document.getElementById('csv-file').click()">📂 Cliquer pour choisir un fichier CSV<br><small style="color:#64748b">.csv compatible Excel</small></div>
+    <input id="csv-file" type="file" accept=".csv" style="display:none" onchange="processCSV(this)">
+    <div id="csv-status" class="status-box" style="display:none"></div>
+    <button class="action-btn" style="width:100%;padding:10px;background:#059669;color:#fff;border:none;border-radius:8px;cursor:pointer;font-weight:600;margin-top:8px" onclick="downloadTemplate()">📥 Télécharger modèle CSV</button>
+  </div>
+  <button class="modal-close" onclick="document.getElementById('modal-manage').classList.remove('active')">Fermer</button>
+</div></div>
 
 <div id="modal-report" class="modal-overlay"><div class="modal">
   <h2>📋 Rapport Terrain en Temps Réel</h2>
@@ -63,32 +89,24 @@
   <button class="modal-close" onclick="document.getElementById('modal-report').classList.remove('active')">Fermer</button>
 </div></div>
 
-<div id="modal-guide" class="modal-overlay"><div class="modal">
-  <h2>➕ Assistant d'ajout de compte</h2>
-  <div class="wizard-container">
-    <div class="wizard-step"><div class="step-header"><span class="step-badge">1</span><span>Créer l'authentification</span></div><button class="action-btn" onclick="window.open('https://console.firebase.google.com/project/dedieno-demo/authentication/users','_blank')">🔓 Ouvrir Firebase Auth</button></div>
-    <div class="wizard-step"><div class="step-header"><span class="step-badge">2</span><span>Ajouter le rôle & site</span></div><button class="action-btn secondary" onclick="window.open('https://console.firebase.google.com/project/dedieno-demo/database','_blank')">🗄️ Ouvrir Realtime Database</button></div>
-    <div class="wizard-step"><div class="step-header"><span class="step-badge">3</span><span>Format prêt à coller</span></div><textarea id="tpl-json" class="tpl-box" readonly>role: "agent" (ou "superviseur")\nname: "Nom Prénom"\nsite: "Site choisi"</textarea><button class="action-btn" onclick="copyTpl()">📋 Copier le modèle</button></div>
-  </div>
-  <button class="modal-close" onclick="document.getElementById('modal-guide').classList.remove('active')">✅ Fermer l'assistant</button>
-</div></div>
-
 <script type="module">
 import{initializeApp}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import{getDatabase,ref,onValue,set,push,get}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
-import{getAuth,onAuthStateChanged,signInWithEmailAndPassword,signOut}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import{getAuth,onAuthStateChanged,signInWithEmailAndPassword,signOut,createUserWithEmailAndPassword}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 const app=initializeApp({apiKey:"AIzaSyBhlLLm1Vvl3U3JYFZ8rzJJW4pimYDQEEU",authDomain:"dedieno-demo.firebaseapp.com",databaseURL:"https://dedieno-demo-default-rtdb.europe-west1.firebasedatabase.app",projectId:"dedieno-demo"});
 const db=getDatabase(app),auth=getAuth(app);
 
 let map=null,mkrs={},agentsCache={},alertsCache={};
 function showView(n){document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));const el=document.getElementById('view-'+n);if(el)el.classList.add('active');}
-window.copyTpl=()=>{const t=document.getElementById('tpl-json');t.select();navigator.clipboard.writeText(t.value).then(()=>alert('✅ Modèle copié ! Collez-le dans Firebase DB.')).catch(()=>prompt('Copiez manuellement :',t.value));};
+window.switchTab=t=>{document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));document.getElementById('tab-'+t).parentElement.querySelector('.tab.active')?.classList.remove('active');document.getElementById('tab-'+t).classList.add('active');document.querySelectorAll('.tab')[t==='manual'?0:1].classList.add('active');};
+window.downloadTemplate=()=>{const a=document.createElement('a');a.href='data:text/csv;charset=utf-8,email,password,name,role,site\nagt003@millesservices.tg,Temp2026!,Kofi Amed,agent,Lomé-Centre\nsup2@millesservices.tg,Sup2026!,Jean Superviseur,superviseur,';a.download='modele_agents.csv';a.click();};
 
 onAuthStateChanged(auth, async u => {
   if(!u) return showView('login');
   let isSup = false;
   try { const snap=await get(ref(db,'users/'+u.uid)); if(String(snap.val()?.role||'').toLowerCase().includes('superviseur')) isSup=true; } catch(e){}
   if(!isSup && u.email.toLowerCase().includes('super')) isSup=true;
+  document.getElementById('btn-manage').style.display=isSup?'block':'none';
   showView(isSup ? 'supervisor' : 'agent');
   if(isSup) initSup(); else initAg();
 });
@@ -101,7 +119,45 @@ document.getElementById('btn-login')?.addEventListener('click', async()=>{
   catch(e){err.textContent='❌ Identifiant/MDP incorrect';document.getElementById('btn-login').disabled=false;}
 });
 document.querySelectorAll('#btn-logout,#btn-logout-ag').forEach(b=>b.addEventListener('click',()=>signOut(auth)));
-document.getElementById('btn-add-guide')?.addEventListener('click',()=>document.getElementById('modal-guide').classList.add('active'));
+document.getElementById('btn-manage')?.addEventListener('click',()=>document.getElementById('modal-manage').classList.add('active'));
+
+// 👥 CRÉATION MANUELLE
+window.createManual=async()=>{
+  const email=document.getElementById('m-email').value.trim(), pass=document.getElementById('m-pass').value, name=document.getElementById('m-name').value.trim(), role=document.getElementById('m-role').value, site=document.getElementById('m-site').value;
+  const status=document.getElementById('m-status'); status.style.display='block'; status.className='status-box'; status.textContent='⏳ Création...';
+  try{
+    if(!email.includes('@')) throw new Error("Email invalide");
+    const fullEmail=email.includes('@')?email:`${email}@millesservices.tg`;
+    const cred=await createUserWithEmailAndPassword(auth,fullEmail,pass);
+    await set(ref(db,`users/${cred.user.uid}`),{role,name,site,createdAt:Date.now()});
+    status.className='status-box success'; status.textContent=`✅ Compte créé : ${fullEmail} (UID: ${cred.user.uid.slice(0,8)}...)`;
+  }catch(e){status.className='status-box error'; status.textContent=`❌ Erreur: ${e.message}`;}
+};
+
+// 📥 IMPORT CSV
+window.processCSV=async(input)=>{
+  const file=input.files[0]; if(!file)return;
+  const status=document.getElementById('csv-status'); status.style.display='block'; status.className='status-box'; status.textContent='📖 Lecture du fichier...';
+  const reader=new FileReader();
+  reader.onload=async e=>{
+    const lines=e.target.result.trim().split('\n').map(l=>l.split(',')).filter(l=>l.length>=4);
+    if(lines.length===0){status.className='status-box error';status.textContent='❌ Fichier vide ou mal formaté';return;}
+    status.textContent=`⏳ Création de ${lines.length} comptes...`;
+    let ok=0,err=0,msg=[];
+    for(let i=0;i<lines.length;i++){
+      try{
+        const [em,pw,nm,rl,st]=lines[i].map(s=>s.trim());
+        const fullEmail=em.includes('@')?em:`${em}@millesservices.tg`;
+        const cred=await createUserWithEmailAndPassword(auth,fullEmail,pw);
+        await set(ref(db,`users/${cred.user.uid}`),{role:rl.toLowerCase(),name:nm,site:st||'',createdAt:Date.now()});
+        ok++; await new Promise(r=>setTimeout(r,150)); // Délai sécurité Firebase
+      }catch(e){err++;msg.push(`Ligne ${i+1}: ${e.message}`);}
+    }
+    status.className='status-box '+(err===0?'success':'error');
+    status.innerHTML=`✅ ${ok} créés | ❌ ${err} erreurs<br><small>${msg.join('<br>')}</small>`;
+  };
+  reader.readAsText(file);
+};
 
 function initSup(){
   if(typeof L==='undefined') return;
