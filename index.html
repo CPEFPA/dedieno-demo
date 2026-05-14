@@ -35,11 +35,18 @@
 .agent-panel .btn-green{background:#22c55e}.agent-panel .btn-red{background:#ef4444}.agent-panel .btn-gray{background:#64748b}
 .modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.6);display:none;align-items:center;justify-content:center;z-index:1000}
 .modal-overlay.active{display:flex}
-.modal{background:#fff;padding:24px;border-radius:16px;max-width:500px;width:90%;max-height:80vh;overflow-y:auto;box-shadow:0 10px 30px rgba(0,0,0,0.2)}
-.modal h2{margin-bottom:12px;color:#1e40af}
-.modal p,.modal li{margin:6px 0;font-size:14px;line-height:1.5}
-.modal code{background:#f1f5f9;padding:2px 6px;border-radius:4px;font-family:monospace}
-.modal-close{margin-top:16px;width:100%;background:#64748b;color:#fff;padding:10px;border:none;border-radius:8px;cursor:pointer}
+.modal{background:#fff;padding:24px;border-radius:16px;max-width:520px;width:90%;max-height:85vh;overflow-y:auto;box-shadow:0 10px 30px rgba(0,0,0,0.2)}
+.modal h2{margin-bottom:16px;color:#1e40af;text-align:center}
+.wizard-container{display:flex;flex-direction:column;gap:12px}
+.wizard-step{background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:14px}
+.step-header{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.step-badge{background:#1e40af;color:#fff;width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px}
+.action-btn{width:100%;padding:10px;background:#1e40af;color:#fff;border:none;border-radius:8px;cursor:pointer;font-weight:600;font-size:14px;transition:0.2s}
+.action-btn:hover{background:#1e3a8a;transform:translateY(-1px)}
+.action-btn.secondary{background:#059669}
+.action-btn.secondary:hover{background:#047857}
+.tpl-box{width:100%;padding:10px;background:#0f172a;color:#22c55e;font-family:monospace;font-size:13px;border:1px solid #334155;border-radius:6px;resize:none;margin-bottom:8px}
+.modal-close{margin-top:16px;width:100%;background:#64748b;color:#fff;padding:10px;border:none;border-radius:8px;cursor:pointer;font-weight:600}
 .stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:12px 0}
 .stat-card{background:#f8fafc;padding:12px;border-radius:8px;text-align:center;border:1px solid #e2e8f0}
 .stat-num{font-size:24px;font-weight:700;color:#1e40af}
@@ -47,30 +54,23 @@
 @media(max-width:768px){.grid{grid-template-columns:1fr}aside{max-height:65vh;overflow-y:auto;border-right:none;border-bottom:1px solid #e2e8f0}#btn-logout,#btn-logout-ag{margin-top:auto;width:100%;display:block}}
 </style></head><body>
 <div id="view-login" class="view active"><div class="login-card"><img src="logo.png"/><h1>🔐 Dedienɔ</h1><small>MILLES SERVICES • Togo 🇹🇬</small><input id="login-id" placeholder="Identifiant (ex: SUPER, AGT001)"/><input id="login-pass" type="password" placeholder="Mot de passe"/><button id="btn-login">Se connecter</button><div id="login-err" class="login-err"></div></div></div>
-<div id="view-supervisor" class="view"><div class="grid"><aside id="sup-sidebar"><div class="brand"><img src="logo.png"/><div><h1>Dedienɔ<small>Superviseur</small></div></div><h3>👥 Agents (<span id="sup-cnt">0</span>)</h3><button class="btn btn-primary" id="btn-refresh">🔄 Actualiser</button><button class="btn btn-secondary" id="btn-csv">📊 Export CSV</button><button class="btn btn-secondary" id="btn-report">📋 Rapport</button><button class="btn btn-warning" id="btn-add-guide">➕ Ajouter Agent/Sup</button><div id="sup-debug" class="debug"></div><div id="sup-list"></div><hr><h3>🚨 Alertes SOS</h3><div id="sup-sos"></div><button class="btn btn-danger" id="btn-logout">🔒 Déconnexion</button></aside><main style="height:100%;overflow:hidden"><div id="map"></div></main></div></div>
+<div id="view-supervisor" class="view"><div class="grid"><aside id="sup-sidebar"><div class="brand"><img src="logo.png"/><div><h1>Dedienɔ<small>Superviseur</small></div></div><h3>👥 Agents (<span id="sup-cnt">0</span>)</h3><button class="btn btn-primary" id="btn-refresh">🔄 Actualiser</button><button class="btn btn-secondary" id="btn-csv">📊 Export CSV</button><button class="btn btn-secondary" id="btn-report">📋 Rapport</button><button class="btn btn-warning" id="btn-add-guide">➕ Ajouter Compte</button><div id="sup-debug" class="debug"></div><div id="sup-list"></div><hr><h3>🚨 Alertes SOS</h3><div id="sup-sos"></div><button class="btn btn-danger" id="btn-logout">🔒 Déconnexion</button></aside><main style="height:100%;overflow:hidden"><div id="map"></div></main></div></div>
 <div id="view-agent" class="view"><div class="agent-panel"><div class="brand"><img src="logo.png"/><h1>👮 Agent Dedienɔ<small>MILLES SERVICES</small></h1></div><input id="ag-name" placeholder="Nom *"/><select id="ag-site"><option value="">-- Choisir --</option><option value="Lomé-Centre">🏢 Lomé-Centre</option><option value="Agoè-Nyivé">🏘️ Agoè-Nyivé</option><option value="Bè-Kpota">🏭 Bè-Kpota</option><option value="Tokoin">🏥 Tokoin</option><option value="Nyékonakpoè">🏘️ Nyékonakpoè</option><option value="Adidogomé">🏢 Adidogomé</option><option value="Kégué">🏭 Kégué</option><option value="Zongo">🕌 Zongo</option><option value="Autre">📍 Autre</option></select><button id="btn-gps" class="btn-green">📍 Démarrer le pointage</button><div id="ag-status" style="margin-top:10px;padding:8px;background:#0f172a;border-radius:6px">En attente...</div><button id="btn-sos" class="btn-red" style="display:none">🚨 SOS</button><button id="btn-logout-ag" class="btn-gray">🔒 Déconnexion</button></div></div>
 
 <div id="modal-report" class="modal-overlay"><div class="modal">
   <h2>📋 Rapport Terrain en Temps Réel</h2>
-  <div id="report-content" style="font-size:14px;line-height:1.6">⏳ Chargement des données...</div>
+  <div id="report-content" style="font-size:14px;line-height:1.6">⏳ Chargement...</div>
   <button class="modal-close" onclick="document.getElementById('modal-report').classList.remove('active')">Fermer</button>
 </div></div>
 
 <div id="modal-guide" class="modal-overlay"><div class="modal">
-  <h2>➕ Ajouter un nouvel Agent ou Superviseur</h2>
-  <p><strong>Pourquoi via Firebase Console ?</strong> C'est la méthode la plus sécurisée. Elle évite les conflits de session et garantit que chaque compte a un rôle clair.</p>
-  <h3 style="margin:12px 0 6px;color:#059669">📋 Étapes (30 secondes)</h3>
-  <ol style="padding-left:20px;font-size:14px;line-height:1.6">
-    <li>Ouvre 👉 <a href="https://console.firebase.google.com/project/dedieno-demo/authentication/users" target="_blank" style="color:#1e40af">Firebase Auth → Utilisateurs</a></li>
-    <li>Clique sur <strong>"Ajouter un utilisateur"</strong></li>
-    <li>Email : <code>id@millesservices.tg</code> (ex: <code>agt002@millesservices.tg</code>)</li>
-    <li>Mot de passe : <code>Temp2026!</code> (l'agent le changera plus tard)</li>
-    <li>Clique sur <strong>"Ajouter"</strong> → Copie l'<strong>UID</strong> affiché</li>
-    <li>Ouvre 👉 <a href="https://console.firebase.google.com/project/dedieno-demo/database" target="_blank">Realtime Database → Données</a></li>
-    <li>Dans <code>users/</code>, clique sur <strong>+</strong> → Clé : <strong>l'UID copié</strong></li>
-    <li>Ajoute les champs :<br><code>role</code> : <code>"agent"</code> (ou <code>"superviseur"</code>)<br><code>name</code> : <code>"Nom Prénom"</code><br><code>site</code> : <code>"Site choisi"</code> (agent uniquement)</li>
-  </ol>
-  <button class="modal-close" onclick="document.getElementById('modal-guide').classList.remove('active')">✅ Compris, fermer</button>
+  <h2>➕ Assistant d'ajout de compte</h2>
+  <div class="wizard-container">
+    <div class="wizard-step"><div class="step-header"><span class="step-badge">1</span><span>Créer l'authentification</span></div><button class="action-btn" onclick="window.open('https://console.firebase.google.com/project/dedieno-demo/authentication/users','_blank')">🔓 Ouvrir Firebase Auth</button></div>
+    <div class="wizard-step"><div class="step-header"><span class="step-badge">2</span><span>Ajouter le rôle & site</span></div><button class="action-btn secondary" onclick="window.open('https://console.firebase.google.com/project/dedieno-demo/database','_blank')">🗄️ Ouvrir Realtime Database</button></div>
+    <div class="wizard-step"><div class="step-header"><span class="step-badge">3</span><span>Format prêt à coller</span></div><textarea id="tpl-json" class="tpl-box" readonly>role: "agent" (ou "superviseur")\nname: "Nom Prénom"\nsite: "Site choisi"</textarea><button class="action-btn" onclick="copyTpl()">📋 Copier le modèle</button></div>
+  </div>
+  <button class="modal-close" onclick="document.getElementById('modal-guide').classList.remove('active')">✅ Fermer l'assistant</button>
 </div></div>
 
 <script type="module">
@@ -82,8 +82,8 @@ const db=getDatabase(app),auth=getAuth(app);
 
 let map=null,mkrs={},agentsCache={},alertsCache={};
 function showView(n){document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));const el=document.getElementById('view-'+n);if(el)el.classList.add('active');}
+window.copyTpl=()=>{const t=document.getElementById('tpl-json');t.select();navigator.clipboard.writeText(t.value).then(()=>alert('✅ Modèle copié ! Collez-le dans Firebase DB.')).catch(()=>prompt('Copiez manuellement :',t.value));};
 
-// 🔐 ROUTING
 onAuthStateChanged(auth, async u => {
   if(!u) return showView('login');
   let isSup = false;
@@ -93,7 +93,6 @@ onAuthStateChanged(auth, async u => {
   if(isSup) initSup(); else initAg();
 });
 
-// 🔑 LOGIN & LOGOUT
 document.getElementById('btn-login')?.addEventListener('click', async()=>{
   const id=document.getElementById('login-id').value.trim().toUpperCase(), p=document.getElementById('login-pass').value, err=document.getElementById('login-err');
   err.textContent=''; if(!id||!p){err.textContent='❌ Champs vides';return;}
@@ -104,18 +103,15 @@ document.getElementById('btn-login')?.addEventListener('click', async()=>{
 document.querySelectorAll('#btn-logout,#btn-logout-ag').forEach(b=>b.addEventListener('click',()=>signOut(auth)));
 document.getElementById('btn-add-guide')?.addEventListener('click',()=>document.getElementById('modal-guide').classList.add('active'));
 
-// 🛡️ SUPERVISEUR
 function initSup(){
   if(typeof L==='undefined') return;
   if(map){map.invalidateSize();return;}
   setTimeout(()=>{if(!document.getElementById('map'))return;map=L.map('map').setView([6.1256,1.2244],13);L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19}).addTo(map);},150);
   onValue(ref(db,'agents'),s=>{
-    agentsCache=s.val()||{};
-    document.getElementById('sup-cnt').textContent=Object.keys(agentsCache).length;
+    agentsCache=s.val()||{};document.getElementById('sup-cnt').textContent=Object.keys(agentsCache).length;
     const l=document.getElementById('sup-list');l.innerHTML='';
     Object.entries(agentsCache).forEach(([id,x])=>{
-      const c=document.createElement('div');c.className='agent-card';
-      c.innerHTML='<b>'+(x.name||'?')+'</b> <span style="color:'+(x.status==='online'?'#059669':'#64748b')+'">● '+(x.status||'off')+'</span>';
+      const c=document.createElement('div');c.className='agent-card';c.innerHTML='<b>'+(x.name||'?')+'</b> <span style="color:'+(x.status==='online'?'#059669':'#64748b')+'">● '+(x.status||'off')+'</span>';
       c.onclick=()=>{if(mkrs[id]&&x.lat&&map)map.setView([x.lat,x.lng],16);};l.appendChild(c);
       if(x.lat&&x.lng&&map){const col=x.status==='online'?'#059669':'#94a3b8';
         if(!mkrs[id])mkrs[id]=L.marker([x.lat,x.lng],{icon:L.divIcon({html:'<div style="background:'+col+';width:12px;height:12px;border-radius:50%;border:3px solid #fff"></div>',iconSize:[18,18]})}).addTo(map);
@@ -123,64 +119,31 @@ function initSup(){
     });
   });
   onValue(ref(db,'alerts'),s=>{
-    alertsCache=s.val()||{};
-    const sos=document.getElementById('sup-sos');
+    alertsCache=s.val()||{};const sos=document.getElementById('sup-sos');
     sos.innerHTML=Object.keys(alertsCache).length?'':'<div style="padding:8px;color:#64748b">✅ Aucune alerte</div>';
     Object.values(alertsCache).sort((a,b)=>(b.timestamp||0)-(a.timestamp||0)).forEach(a=>{
       const time=a.timestamp?new Date(a.timestamp).toLocaleTimeString('fr-FR'):'--:--';
-      sos.prepend(`<div class="sos-alert">
-        <div class="sos-header"><span class="sos-site">🚨 ${a.site||'Site inconnu'}</span><span class="sos-time">${time}</span></div>
-        <div class="sos-agent">👤 ${a.agentId||'Agent ID masqué'} | 📍 Lat/Lng reçus</div>
-        <div class="sos-actions"><button class="btn-resolved" onclick="this.parentElement.parentElement.style.opacity='0.4';this.textContent='✅ Résolu'">Marquer résolu</button></div>
-      </div>`);
+      sos.prepend(`<div class="sos-alert"><div class="sos-header"><span class="sos-site">🚨 ${a.site||'Site inconnu'}</span><span class="sos-time">${time}</span></div><div class="sos-agent">👤 ${a.agentId||'Agent'}</div><div class="sos-actions"><button class="btn-resolved" onclick="this.parentElement.parentElement.style.opacity='0.4';this.textContent='✅ Résolu'">Marquer résolu</button></div></div>`);
     });
   });
 }
 document.getElementById('btn-refresh')?.addEventListener('click',()=>{if(map)map.invalidateSize();initSup();});
 document.getElementById('btn-csv')?.addEventListener('click',()=>alert('📊 Export CSV lancé...'));
 
-// 📋 RAPPORT
 document.getElementById('btn-report')?.addEventListener('click',()=>{
-  const total=Object.keys(agentsCache).length;
-  const online=Object.values(agentsCache).filter(a=>a.status==='online').length;
-  const alerts=Object.keys(alertsCache).length;
-  const lastSync=new Date().toLocaleString('fr-FR');
-  document.getElementById('report-content').innerHTML=`
-    <div class="stats-grid">
-      <div class="stat-card"><div class="stat-num">${total}</div><div class="stat-label">Agents recensés</div></div>
-      <div class="stat-card"><div class="stat-num" style="color:#059669">${online}</div><div class="stat-label">En ligne actuellement</div></div>
-      <div class="stat-card"><div class="stat-num" style="color:#ef4444">${alerts}</div><div class="stat-label">Alertes SOS reçues</div></div>
-      <div class="stat-card"><div class="stat-num" style="color:#1e40af">🟢</div><div class="stat-label">Système opérationnel</div></div>
-    </div>
-    <p style="margin-top:12px"><strong>Dernière synchronisation :</strong> ${lastSync}</p>
-    <p style="font-size:12px;color:#64748b">💡 Pour un rapport détaillé (CSV), utilise le bouton 📊 Export CSV. Les données sont horodatées et prêtes pour Excel.</p>
-  `;
+  const total=Object.keys(agentsCache).length, online=Object.values(agentsCache).filter(a=>a.status==='online').length, alerts=Object.keys(alertsCache).length;
+  document.getElementById('report-content').innerHTML=`<div class="stats-grid"><div class="stat-card"><div class="stat-num">${total}</div><div class="stat-label">Agents</div></div><div class="stat-card"><div class="stat-num" style="color:#059669">${online}</div><div class="stat-label">En ligne</div></div><div class="stat-card"><div class="stat-num" style="color:#ef4444">${alerts}</div><div class="stat-label">Alertes SOS</div></div><div class="stat-card"><div class="stat-num" style="color:#1e40af">🟢</div><div class="stat-label">Système OK</div></div></div><p style="margin-top:12px;font-size:12px;color:#64748b">💡 Pour un rapport Excel, utilisez 📊 Export CSV.</p>`;
   document.getElementById('modal-report').classList.add('active');
 });
 
-// 👮 AGENT
 let agId=null,agRun=false,agInterval=null;
-function initAg(){console.log('👮 Interface Agent chargée');}
+function initAg(){}
 document.getElementById('btn-gps')?.addEventListener('click',async()=>{
-  const n=document.getElementById('ag-name').value.trim(), s=document.getElementById('ag-site').value, statusDiv=document.getElementById('ag-status');
+  const n=document.getElementById('ag-name').value.trim(), s=document.getElementById('ag-site').value, st=document.getElementById('ag-status');
   if(!n||!s){alert('❌ Nom et site requis');return;}
-  statusDiv.textContent='⏳ Activation GPS...';
-  agId='ag_'+Math.random().toString(36).substr(2,8); agRun=true;
-  document.getElementById('btn-sos').style.display='block';
-  if(agInterval) clearInterval(agInterval);
-  agInterval=setInterval(async()=>{
-    if(!agRun)return;
-    let la,lo,acc;
-    try{const p=await new Promise((r,j)=>navigator.geolocation.getCurrentPosition(r,j,{enableHighAccuracy:true,timeout:8000}));la=p.coords.latitude;lo=p.coords.longitude;acc=p.coords.accuracy;}
-    catch{la=6.1256+(Math.random()-.5)*.002;lo=1.2244+(Math.random()-.5)*.002;acc=15;}
-    await set(ref(db,'agents/'+agId),{name:n,site:s,status:'online',lat:la,lng:lo,accuracy:acc,lastPing:Date.now()});
-    statusDiv.textContent=`✅ GPS actif | ${la.toFixed(5)}, ${lo.toFixed(5)}`;
-  },10000);
+  st.textContent='⏳ Activation GPS...';agId='ag_'+Math.random().toString(36).substr(2,8);agRun=true;document.getElementById('btn-sos').style.display='block';
+  if(agInterval)clearInterval(agInterval);
+  agInterval=setInterval(async()=>{if(!agRun)return;let la,lo,acc;try{const p=await new Promise((r,j)=>navigator.geolocation.getCurrentPosition(r,j,{enableHighAccuracy:true,timeout:8000}));la=p.coords.latitude;lo=p.coords.longitude;acc=p.coords.accuracy;}catch{la=6.1256+(Math.random()-.5)*.002;lo=1.2244+(Math.random()-.5)*.002;acc=15;}await set(ref(db,'agents/'+agId),{name:n,site:s,status:'online',lat:la,lng:lo,accuracy:acc,lastPing:Date.now()});st.textContent=`✅ GPS actif | ${la.toFixed(5)}, ${lo.toFixed(5)}`;},10000);
 });
-document.getElementById('btn-sos')?.addEventListener('click',async()=>{
-  if(!agId){alert('⚠️ Active d\'abord le GPS');return;}
-  await push(ref(db,'alerts'),{agentId:agId,site:document.getElementById('ag-site').value,timestamp:Date.now()});
-  document.getElementById('ag-status').textContent='🚨 SOS ENVOYÉ ! Superviseur alerté.';
-  setTimeout(()=>{if(document.getElementById('ag-status'))document.getElementById('ag-status').textContent='✅ GPS actif';},5000);
-});
+document.getElementById('btn-sos')?.addEventListener('click',async()=>{if(!agId)return alert('⚠️ Active GPS');await push(ref(db,'alerts'),{agentId:agId,site:document.getElementById('ag-site').value,timestamp:Date.now()});document.getElementById('ag-status').textContent='🚨 SOS ENVOYÉ !';setTimeout(()=>{if(document.getElementById('ag-status'))document.getElementById('ag-status').textContent='✅ GPS actif';},5000);});
 </script></body></html>
