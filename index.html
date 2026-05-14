@@ -54,7 +54,7 @@
 .stat-label{font-size:12px;color:#64748b;margin-top:4px}
 @media(max-width:768px){.grid{grid-template-columns:1fr}aside{max-height:65vh;overflow-y:auto;border-right:none;border-bottom:1px solid #e2e8f0}#btn-logout,#btn-logout-ag{margin-top:auto;width:100%;display:block}}
 </style></head><body>
-<div id="view-login" class="view active"><div class="login-card"><img src="logo.png"/><h1>🔐 Dedienɔ</h1><small>MILLES SERVICES • Togo 🇹🇬</small><input id="login-id" placeholder="Identifiant (ex: SUPER, AGT001)"/><input id="login-pass" type="password" placeholder="Mot de passe"/><button id="btn-login">Se connecter</button><div id="login-err" class="login-err"></div></div></div>
+<div id="view-login" class="view active"><div class="login-card"><img src="logo.png"/><h1>🔐 Dedienɔ</h1><small>MILLES SERVICES • Togo 🇹🇬</small><input id="login-id" placeholder="Identifiant (ex: SUPER, AGT001 ou email complet)"/><input id="login-pass" type="password" placeholder="Mot de passe"/><button id="btn-login">Se connecter</button><div id="login-err" class="login-err"></div></div></div>
 <div id="view-supervisor" class="view"><div class="grid"><aside id="sup-sidebar"><div class="brand"><img src="logo.png"/><div><h1>Dedienɔ<small>Superviseur</small></div></div><h3>👥 Agents (<span id="sup-cnt">0</span>)</h3><button class="btn btn-primary" id="btn-refresh">🔄 Actualiser</button><button class="btn btn-secondary" id="btn-csv">📊 Export CSV</button><button class="btn btn-secondary" id="btn-report">📋 Rapport</button><button class="btn btn-warning" id="btn-manage">👥 Gestion des Comptes</button><div id="sup-debug" class="debug"></div><div id="sup-list"></div><hr><h3>🚨 Alertes SOS</h3><div id="sup-sos"></div><button class="btn btn-danger" id="btn-logout">🔒 Déconnexion</button></aside><main style="height:100%;overflow:hidden"><div id="map"></div></main></div></div>
 <div id="view-agent" class="view"><div class="agent-panel"><div class="brand"><img src="logo.png"/><h1>👮 Agent Dedienɔ<small>MILLES SERVICES</small></h1></div><input id="ag-name" placeholder="Nom *"/><select id="ag-site"><option value="">-- Choisir --</option><option value="Lomé-Centre">🏢 Lomé-Centre</option><option value="Agoè-Nyivé">🏘️ Agoè-Nyivé</option><option value="Bè-Kpota">🏭 Bè-Kpota</option><option value="Tokoin">🏥 Tokoin</option><option value="Nyékonakpoè">🏘️ Nyékonakpoè</option><option value="Adidogomé">🏢 Adidogomé</option><option value="Kégué">🏭 Kégué</option><option value="Zongo">🕌 Zongo</option><option value="Autre">📍 Autre</option></select><button id="btn-gps" class="btn-green">📍 Démarrer le pointage</button><div id="ag-status" style="margin-top:10px;padding:8px;background:#0f172a;border-radius:6px">En attente...</div><button id="btn-sos" class="btn-red" style="display:none">🚨 SOS</button><button id="btn-logout-ag" class="btn-gray">🔒 Déconnexion</button></div></div>
 
@@ -98,7 +98,7 @@ const db=getDatabase(app),auth=getAuth(app);
 
 let map=null,mkrs={},agentsCache={},alertsCache={};
 function showView(n){document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));const el=document.getElementById('view-'+n);if(el)el.classList.add('active');}
-window.switchTab=t=>{document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));document.getElementById('tab-'+t).parentElement.querySelector('.tab.active')?.classList.remove('active');document.getElementById('tab-'+t).classList.add('active');document.querySelectorAll('.tab')[t==='manual'?0:1].classList.add('active');};
+window.switchTab=t=>{document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));document.getElementById('tab-'+t).classList.add('active');document.querySelectorAll('.tab')[t==='manual'?0:1].classList.add('active');};
 window.downloadTemplate=()=>{const a=document.createElement('a');a.href='data:text/csv;charset=utf-8,email,password,name,role,site\nagt003@millesservices.tg,Temp2026!,Kofi Amed,agent,Lomé-Centre\nsup2@millesservices.tg,Sup2026!,Jean Superviseur,superviseur,';a.download='modele_agents.csv';a.click();};
 
 onAuthStateChanged(auth, async u => {
@@ -111,12 +111,15 @@ onAuthStateChanged(auth, async u => {
   if(isSup) initSup(); else initAg();
 });
 
+// 🔑 LOGIN INTELLIGENT (accepte ID court OU email complet)
 document.getElementById('btn-login')?.addEventListener('click', async()=>{
-  const id=document.getElementById('login-id').value.trim().toUpperCase(), p=document.getElementById('login-pass').value, err=document.getElementById('login-err');
-  err.textContent=''; if(!id||!p){err.textContent='❌ Champs vides';return;}
+  let rawId=document.getElementById('login-id').value.trim();
+  const p=document.getElementById('login-pass').value, err=document.getElementById('login-err');
+  err.textContent=''; if(!rawId||!p){err.textContent='❌ Champs vides';return;}
+  let email = rawId.includes('@') ? rawId.toLowerCase() : `${rawId.toLowerCase()}@millesservices.tg`;
   document.getElementById('btn-login').disabled=true;
-  try{await signInWithEmailAndPassword(auth,id+'@millesservices.tg',p);}
-  catch(e){err.textContent='❌ Identifiant/MDP incorrect';document.getElementById('btn-login').disabled=false;}
+  try{await signInWithEmailAndPassword(auth, email, p);}
+  catch(e){err.textContent='❌ Identifiant ou mot de passe incorrect';document.getElementById('btn-login').disabled=false;}
 });
 document.querySelectorAll('#btn-logout,#btn-logout-ag').forEach(b=>b.addEventListener('click',()=>signOut(auth)));
 document.getElementById('btn-manage')?.addEventListener('click',()=>document.getElementById('modal-manage').classList.add('active'));
@@ -150,7 +153,7 @@ window.processCSV=async(input)=>{
         const fullEmail=em.includes('@')?em:`${em}@millesservices.tg`;
         const cred=await createUserWithEmailAndPassword(auth,fullEmail,pw);
         await set(ref(db,`users/${cred.user.uid}`),{role:rl.toLowerCase(),name:nm,site:st||'',createdAt:Date.now()});
-        ok++; await new Promise(r=>setTimeout(r,150)); // Délai sécurité Firebase
+        ok++; await new Promise(r=>setTimeout(r,150));
       }catch(e){err++;msg.push(`Ligne ${i+1}: ${e.message}`);}
     }
     status.className='status-box '+(err===0?'success':'error');
