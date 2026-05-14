@@ -43,6 +43,10 @@
 .modal-overlay.active{display:flex}
 .modal{background:#fff;padding:24px;border-radius:16px;max-width:540px;width:90%;max-height:85vh;overflow-y:auto;box-shadow:0 10px 30px rgba(0,0,0,0.2)}
 .modal h2{margin-bottom:16px;color:#1e40af;text-align:center}
+.history-list{max-height:300px;overflow-y:auto;border:1px solid #e2e8f0;border-radius:8px;margin-bottom:12px}
+.history-list div{padding:8px 12px;border-bottom:1px solid #f1f5f9;font-size:13px}
+.history-list div:last-child{border:none}
+.history-time{color:#64748b;margin-right:8px;font-family:monospace}
 .tabs{display:flex;gap:8px;margin-bottom:16px;border-bottom:2px solid #e2e8f0;padding-bottom:8px}
 .tab{flex:1;padding:10px;border:none;background:#f1f5f9;border-radius:8px;cursor:pointer;font-weight:600;color:#64748b;transition:0.2s}
 .tab.active{background:#1e40af;color:#fff}
@@ -67,7 +71,7 @@
 @media(max-width:768px){.grid{grid-template-columns:1fr}aside{max-height:65vh;overflow-y:auto;border-right:none;border-bottom:1px solid #e2e8f0}#btn-logout,#btn-logout-ag{margin-top:auto;width:100%;display:block}}
 </style></head><body>
 <div id="view-login" class="view active"><div class="login-card"><img src="logo.png"/><h1>🔐 Dedienɔ</h1><small>MILLES SERVICES • Togo 🇹🇬</small><input id="login-id" placeholder="Identifiant (ex: agent004 ou email complet)"/><input id="login-pass" type="password" placeholder="Mot de passe"/><button id="btn-login">Se connecter</button><div id="login-err" class="login-err"></div></div></div>
-<div id="view-supervisor" class="view"><div class="grid"><aside id="sup-sidebar"><div class="brand"><img src="logo.png"/><div><h1>Dedienɔ<small>Superviseur</small></div></div><h3>👥 Agents (<span id="sup-cnt">0</span>)</h3><button class="btn btn-primary" id="btn-refresh">🔄 Actualiser</button><button class="btn btn-secondary" id="btn-csv">📊 Export CSV</button><button class="btn btn-secondary" id="btn-report">📋 Rapport</button><button class="btn btn-warning" id="btn-manage">👥 Gestion des Comptes</button><div id="sup-debug" class="debug"></div><div id="sup-list"></div><hr><h3>🚨 Alertes SOS <span class="sound-toggle" onclick="testSound()" title="Tester le son">🔊</span></h3><div id="sup-sos"></div><button class="btn btn-secondary" id="btn-clear-sos" style="font-size:11px;margin-top:4px">🗑️ Purger historique</button><button class="btn btn-danger" id="btn-logout">🔒 Déconnexion</button></aside><main style="height:100%;overflow:hidden"><div id="map"></div></main></div></div>
+<div id="view-supervisor" class="view"><div class="grid"><aside id="sup-sidebar"><div class="brand"><img src="logo.png"/><div><h1>Dedienɔ<small>Superviseur</small></div></div><h3>👥 Agents (<span id="sup-cnt">0</span>)</h3><button class="btn btn-primary" id="btn-refresh">🔄 Actualiser</button><button class="btn btn-secondary" id="btn-csv">📊 Export CSV</button><button class="btn btn-secondary" id="btn-report">📋 Rapport</button><button class="btn btn-secondary" id="btn-history">📜 Historique</button><button class="btn btn-warning" id="btn-manage">👥 Gestion des Comptes</button><div id="sup-debug" class="debug"></div><div id="sup-list"></div><hr><h3>🚨 Alertes SOS <span class="sound-toggle" onclick="testSound()" title="Tester le son">🔊</span></h3><div id="sup-sos"></div><button class="btn btn-secondary" id="btn-clear-sos" style="font-size:11px;margin-top:4px">🗑️ Purger historique SOS</button><button class="btn btn-danger" id="btn-logout">🔒 Déconnexion</button></aside><main style="height:100%;overflow:hidden"><div id="map"></div></main></div></div>
 <div id="view-agent" class="view"><div class="agent-panel"><div class="brand"><img src="logo.png"/><h1>👮 Agent Dedienɔ<small>MILLES SERVICES</small></h1></div><input id="ag-name" placeholder="Nom *"/><select id="ag-site"><option value="">-- Choisir --</option><option value="Lomé-Centre">🏢 Lomé-Centre</option><option value="Agoè-Nyivé">🏘️ Agoè-Nyivé</option><option value="Bè-Kpota">🏭 Bè-Kpota</option><option value="Tokoin">🏥 Tokoin</option><option value="Nyékonakpoè">🏘️ Nyékonakpoè</option><option value="Adidogomé">🏢 Adidogomé</option><option value="Kégué">🏭 Kégué</option><option value="Zongo">🕌 Zongo</option><option value="Autre">📍 Autre</option></select><button id="btn-gps" class="btn-green">📍 Démarrer le pointage</button><div id="ag-status" style="margin-top:10px;padding:8px;background:#0f172a;border-radius:6px">En attente...</div><button id="btn-sos" class="btn-red" style="display:none">🚨 SOS</button><button id="btn-logout-ag" class="btn-gray">🔒 Déconnexion</button></div></div>
 
 <div id="modal-manage" class="modal-overlay"><div class="modal">
@@ -92,6 +96,12 @@
   <button class="modal-close" onclick="document.getElementById('modal-manage').classList.remove('active')">Fermer</button>
 </div></div>
 
+<div id="modal-history" class="modal-overlay"><div class="modal">
+  <h2>📜 Historique d'Activité</h2>
+  <div id="history-list" class="history-list"></div>
+  <button class="modal-close" onclick="document.getElementById('modal-history').classList.remove('active')">Fermer</button>
+</div></div>
+
 <div id="modal-report" class="modal-overlay"><div class="modal">
   <h2>📋 Rapport Terrain en Temps Réel</h2>
   <div id="report-content" style="font-size:14px;line-height:1.6">⏳ Chargement...</div>
@@ -108,6 +118,7 @@ const app=initializeApp(config), mgmtApp=initializeApp(config,'mgmt');
 const db=getDatabase(app), auth=getAuth(app), mgmtAuth=getAuth(mgmtApp);
 
 let map=null,mkrs={},agentsCache={},alertsCache={},resolvedAlerts=new Set(),playedAlerts=new Set();
+const activityLog=[];
 const alarmSound = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
 window.testSound=()=>{alarmSound.play().catch(e=>alert("🔊 Cliquez une fois sur la page pour autoriser le son."));};
 
@@ -115,6 +126,27 @@ function showView(n){document.querySelectorAll('.view').forEach(v=>v.classList.r
 window.switchTab=t=>{document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));document.getElementById('tab-'+t).classList.add('active');document.querySelectorAll('.tab')[t==='manual'?0:1].classList.add('active');};
 window.copyCred=()=>navigator.clipboard.writeText(document.getElementById('cred-text').innerText).then(()=>alert('✅ Copié !'));
 window.downloadTemplate=()=>{const a=document.createElement('a');a.href='data:text/csv;charset=utf-8,email,password,name,role,site\nagt003@millesservices.tg,MilS2026!,Kofi Amed,agent,Lomé-Centre';a.download='modele_agents.csv';a.click();};
+
+// 📜 Système d'historique
+window.addLog=(type,msg)=>{
+  const time=new Date().toLocaleTimeString('fr-FR');
+  activityLog.unshift({time,type,msg});
+  if(activityLog.length>100) activityLog.pop();
+  window.renderHistory();
+};
+window.renderHistory=()=>{
+  const c=document.getElementById('history-list'); if(!c)return;
+  c.innerHTML=activityLog.length?activityLog.slice(0,50).map(l=>{
+    const icon=l.type==='sos'?'🚨':l.type==='online'?'🟢':'📡';
+    return `<div><span class="history-time">${l.time}</span>${icon} ${l.msg}</div>`;
+  }).join(''):'<div style="padding:10px;color:#64748b">Aucune activité récente</div>';
+};
+
+// 🔍 CORRECTION CRITIQUE : Nom exact via clé Firebase
+window.getAgentName=(id)=>{
+  if(!id||!agentsCache) return 'Agent inconnu';
+  return agentsCache[id]?.name || `Agent (${id.slice(-6)})`;
+};
 
 onAuthStateChanged(auth, async u => {
   if(!u) return showView('login');
@@ -137,6 +169,7 @@ document.getElementById('btn-login')?.addEventListener('click', async()=>{
 });
 document.querySelectorAll('#btn-logout,#btn-logout-ag').forEach(b=>b.addEventListener('click',()=>signOut(auth)));
 document.getElementById('btn-manage')?.addEventListener('click',()=>document.getElementById('modal-manage').classList.add('active'));
+document.getElementById('btn-history')?.addEventListener('click',()=>{window.renderHistory();document.getElementById('modal-history').classList.add('active');});
 
 window.createManual=async()=>{
   const email=document.getElementById('m-email').value.trim(), pass=document.getElementById('m-pass').value, name=document.getElementById('m-name').value.trim(), role=document.getElementById('m-role').value, site=document.getElementById('m-site').value;
@@ -175,18 +208,11 @@ window.processCSV=async(input)=>{
   }; reader.readAsText(file);
 };
 
-function getAgentName(id){
-  if(!id || !agentsCache) return 'Agent inconnu';
-  const match=Object.values(agentsCache).find(a=>(a.id||a.uid||'')===id || id.includes(a.id?.slice(0,6)||''));
-  return match?.name || `Agent (${id.slice(-6)})`;
-}
-
 function renderSOS(){
-  const container=document.getElementById('sup-sos');
-  if(!container) return;
+  const container=document.getElementById('sup-sos'); if(!container)return;
   const list=Object.entries(alertsCache||{}).sort((a,b)=>(b[1].timestamp||0)-(a[1].timestamp||0));
   const active=list.filter(([id])=>!resolvedAlerts.has(id)).slice(0,10);
-  container.innerHTML=active.length ? '' : '<div style="padding:12px;color:#64748b;text-align:center">✅ Aucune alerte active</div>';
+  container.innerHTML=active.length?'':'<div style="padding:12px;color:#64748b;text-align:center">✅ Aucune alerte active</div>';
   active.forEach(([id,a])=>{
     const time=a.timestamp?new Date(a.timestamp).toLocaleTimeString('fr-FR'):'--:--';
     const isNew=!playedAlerts.has(id);
@@ -203,7 +229,7 @@ document.getElementById('btn-clear-sos')?.addEventListener('click',()=>{
     const sosDiv=document.getElementById('sup-sos'); sosDiv.innerHTML='<div style="padding:10px">⏳ Nettoyage...</div>';
     get(ref(db,'alerts')).then(s=>{
       Object.keys(s.val()||{}).forEach(k=>remove(ref(db,'alerts/'+k)));
-      alertsCache={}; resolvedAlerts.clear(); renderSOS(); alert('✅ Historique purgé');
+      alertsCache={}; resolvedAlerts.clear(); renderSOS(); alert('✅ Historique SOS purgé');
     });
   }
 });
@@ -212,9 +238,20 @@ function initSup(){
   if(typeof L==='undefined') return;
   if(map){map.invalidateSize();return;}
   setTimeout(()=>{if(!document.getElementById('map'))return;map=L.map('map').setView([6.1256,1.2244],13);L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19}).addTo(map);},150);
+  
   onValue(ref(db,'agents'),s=>{
-    agentsCache=s.val()||{};document.getElementById('sup-cnt').textContent=Object.keys(agentsCache).length;
+    const prevCache={...agentsCache};
+    agentsCache=s.val()||{};
+    document.getElementById('sup-cnt').textContent=Object.keys(agentsCache).length;
     const l=document.getElementById('sup-list');l.innerHTML='';
+    
+    // Historique connexions
+    Object.entries(agentsCache).forEach(([id,x])=>{
+      if(x.status==='online' && (!prevCache[id] || prevCache[id].status!=='online')){
+        addLog('online',`<b>${x.name}</b> connecté à <b>${x.site}</b>`);
+      }
+    });
+
     Object.entries(agentsCache).forEach(([id,x])=>{
       const c=document.createElement('div');c.className='agent-card';c.innerHTML='<b>'+(x.name||'?')+'</b> <span style="color:'+(x.status==='online'?'#059669':'#64748b')+'">● '+(x.status||'off')+'</span>';
       c.onclick=()=>{if(mkrs[id]&&x.lat&&map)map.setView([x.lat,x.lng],16);};l.appendChild(c);
@@ -227,7 +264,16 @@ function initSup(){
       }
     });
   });
-  onValue(ref(db,'alerts'),s=>{alertsCache=s.val()||{};renderSOS();});
+
+  onValue(ref(db,'alerts'),s=>{
+    alertsCache=s.val()||{};
+    Object.entries(alertsCache).forEach(([id,a])=>{
+      if(!resolvedAlerts.has(id) && !playedAlerts.has(id)){
+        addLog('sos',`SOS envoyé par <b>${getAgentName(a.agentId)}</b> à ${a.site}`);
+      }
+    });
+    renderSOS();
+  });
 }
 document.getElementById('btn-refresh')?.addEventListener('click',()=>{if(map)map.invalidateSize();initSup();});
 document.getElementById('btn-csv')?.addEventListener('click',()=>alert('📊 Export CSV...'));
