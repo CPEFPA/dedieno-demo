@@ -12,11 +12,13 @@
 .brand img{width:32px;height:32px;border-radius:6px}.brand h1{font-size:18px;font-weight:700}.brand small{opacity:.8;font-size:12px}
 .agent-card{margin:6px 0;padding:10px;background:var(--card);border-radius:8px;border-left:4px solid var(--s);cursor:pointer}
 .agent-card:hover{transform:translateX(3px);box-shadow:0 4px 12px rgba(30,64,175,0.15)}
-.sos-alert{background:#fff;border-left:4px solid #ef4444;padding:12px;margin:8px 0;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,0.1)}
+.sos-alert{background:#fff;border-left:4px solid #ef4444;padding:12px;margin:8px 0;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,0.1);animation:flash 2s infinite}
+@keyframes flash{0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,.3)}50%{box-shadow:0 0 0 6px rgba(239,68,68,0)}}
 .sos-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
 .sos-site{font-weight:700;color:#1e40af}.sos-time{font-size:11px;color:#64748b}.sos-agent{font-size:13px;color:#334155}
-.sos-actions{display:flex;gap:8px;margin-top:6px}
+.sos-actions{display:flex;gap:8px;margin-top:6px;align-items:center}
 .btn-resolved{background:#dcfce7;color:#166534;border:none;padding:6px 10px;border-radius:6px;cursor:pointer;font-size:12px;font-weight:600}
+.sound-toggle{cursor:pointer;font-size:14px}
 .debug{font-size:11px;color:var(--muted);margin:4px 0;max-height:80px;overflow-y:auto;background:#f1f5f9;padding:6px;border-radius:6px}
 .btn{padding:8px 16px;border:none;border-radius:8px;cursor:pointer;font-size:13px;font-weight:600;margin:4px 0;color:#fff}
 .btn-primary{background:var(--p)}.btn-secondary{background:var(--s)}.btn-danger{background:#ef4444}.btn-warning{background:#f59e0b;color:#0f172a}
@@ -29,8 +31,9 @@
 #view-agent{background:linear-gradient(135deg,#1e40af,#059669);padding:20px}
 .agent-panel{background:#1e293b;padding:24px;border-radius:20px;max-width:420px;width:100%;text-align:center;color:#fff}
 .agent-panel input,.agent-panel select{width:100%;padding:12px;margin:6px 0;border-radius:10px;border:1px solid #334155;background:#0f172a;color:#fff}
-.agent-panel button{width:100%;padding:14px;margin:10px 0;border:none;border-radius:12px;font-weight:600;cursor:pointer;color:#fff}
+.agent-panel button{width:100%;padding:14px;margin:10px 0;border:none;border-radius:12px;font-weight:600;cursor:pointer;color:#fff;transition:0.2s}
 .agent-panel .btn-green{background:#22c55e}.agent-panel .btn-red{background:#ef4444}.agent-panel .btn-gray{background:#64748b}
+.agent-panel .btn-red:disabled{opacity:0.6;cursor:not-allowed}
 .modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.6);display:none;align-items:center;justify-content:center;z-index:1000}
 .modal-overlay.active{display:flex}
 .modal{background:#fff;padding:24px;border-radius:16px;max-width:540px;width:90%;max-height:85vh;overflow-y:auto;box-shadow:0 10px 30px rgba(0,0,0,0.2)}
@@ -54,20 +57,18 @@
 .stat-card{background:#f8fafc;padding:12px;border-radius:8px;text-align:center;border:1px solid #e2e8f0}
 .stat-num{font-size:24px;font-weight:700;color:#1e40af}
 .stat-label{font-size:12px;color:#64748b;margin-top:4px}
+@keyframes bounce{0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(-3px)}}
 @media(max-width:768px){.grid{grid-template-columns:1fr}aside{max-height:65vh;overflow-y:auto;border-right:none;border-bottom:1px solid #e2e8f0}#btn-logout,#btn-logout-ag{margin-top:auto;width:100%;display:block}}
 </style></head><body>
-<div id="view-login" class="view active"><div class="login-card"><img src="logo.png"/><h1>🔐 Dedienɔ</h1><small>MILLES SERVICES • Togo 🇹🇬</small><input id="login-id" placeholder="Identifiant (ex: agent003 ou agent003@millesservices.tg)"/><input id="login-pass" type="password" placeholder="Mot de passe"/><button id="btn-login">Se connecter</button><div id="login-err" class="login-err"></div></div></div>
-<div id="view-supervisor" class="view"><div class="grid"><aside id="sup-sidebar"><div class="brand"><img src="logo.png"/><div><h1>Dedienɔ<small>Superviseur</small></div></div><h3>👥 Agents (<span id="sup-cnt">0</span>)</h3><button class="btn btn-primary" id="btn-refresh">🔄 Actualiser</button><button class="btn btn-secondary" id="btn-csv">📊 Export CSV</button><button class="btn btn-secondary" id="btn-report">📋 Rapport</button><button class="btn btn-warning" id="btn-manage">👥 Gestion des Comptes</button><div id="sup-debug" class="debug"></div><div id="sup-list"></div><hr><h3>🚨 Alertes SOS</h3><div id="sup-sos"></div><button class="btn btn-danger" id="btn-logout">🔒 Déconnexion</button></aside><main style="height:100%;overflow:hidden"><div id="map"></div></main></div></div>
+<div id="view-login" class="view active"><div class="login-card"><img src="logo.png"/><h1>🔐 Dedienɔ</h1><small>MILLES SERVICES • Togo 🇹🇬</small><input id="login-id" placeholder="Identifiant (ex: agent004 ou email complet)"/><input id="login-pass" type="password" placeholder="Mot de passe"/><button id="btn-login">Se connecter</button><div id="login-err" class="login-err"></div></div></div>
+<div id="view-supervisor" class="view"><div class="grid"><aside id="sup-sidebar"><div class="brand"><img src="logo.png"/><div><h1>Dedienɔ<small>Superviseur</small></div></div><h3>👥 Agents (<span id="sup-cnt">0</span>)</h3><button class="btn btn-primary" id="btn-refresh">🔄 Actualiser</button><button class="btn btn-secondary" id="btn-csv">📊 Export CSV</button><button class="btn btn-secondary" id="btn-report">📋 Rapport</button><button class="btn btn-warning" id="btn-manage">👥 Gestion des Comptes</button><div id="sup-debug" class="debug"></div><div id="sup-list"></div><hr><h3>🚨 Alertes SOS <span class="sound-toggle" onclick="testSound()" title="Tester le son">🔊</span></h3><div id="sup-sos"></div><button class="btn btn-danger" id="btn-logout">🔒 Déconnexion</button></aside><main style="height:100%;overflow:hidden"><div id="map"></div></main></div></div>
 <div id="view-agent" class="view"><div class="agent-panel"><div class="brand"><img src="logo.png"/><h1>👮 Agent Dedienɔ<small>MILLES SERVICES</small></h1></div><input id="ag-name" placeholder="Nom *"/><select id="ag-site"><option value="">-- Choisir --</option><option value="Lomé-Centre">🏢 Lomé-Centre</option><option value="Agoè-Nyivé">🏘️ Agoè-Nyivé</option><option value="Bè-Kpota">🏭 Bè-Kpota</option><option value="Tokoin">🏥 Tokoin</option><option value="Nyékonakpoè">🏘️ Nyékonakpoè</option><option value="Adidogomé">🏢 Adidogomé</option><option value="Kégué">🏭 Kégué</option><option value="Zongo">🕌 Zongo</option><option value="Autre">📍 Autre</option></select><button id="btn-gps" class="btn-green">📍 Démarrer le pointage</button><div id="ag-status" style="margin-top:10px;padding:8px;background:#0f172a;border-radius:6px">En attente...</div><button id="btn-sos" class="btn-red" style="display:none">🚨 SOS</button><button id="btn-logout-ag" class="btn-gray">🔒 Déconnexion</button></div></div>
 
 <div id="modal-manage" class="modal-overlay"><div class="modal">
   <h2>👥 Gestion des Comptes</h2>
-  <div class="tabs">
-    <button class="tab active" onclick="switchTab('manual')">➕ Formulaire</button>
-    <button class="tab" onclick="switchTab('csv')">📥 Import CSV</button>
-  </div>
+  <div class="tabs"><button class="tab active" onclick="switchTab('manual')">➕ Formulaire</button><button class="tab" onclick="switchTab('csv')">📥 Import CSV</button></div>
   <div id="tab-manual" class="tab-content active">
-    <div class="form-group"><label>Email (@millesservices.tg)</label><input id="m-email" placeholder="ex: agent004"></div>
+    <div class="form-group"><label>Email (@millesservices.tg)</label><input id="m-email" placeholder="ex: agent005"></div>
     <div class="form-group"><label>Mot de passe</label><input id="m-pass" type="password" placeholder="MilS2026!"></div>
     <div class="form-group"><label>Nom complet</label><input id="m-name" placeholder="Koffi Mensah"></div>
     <div class="form-group"><label>Rôle</label><select id="m-role"><option value="agent">👮 Agent</option><option value="superviseur">🛡️ Superviseur</option></select></div>
@@ -97,14 +98,16 @@ import{getDatabase,ref,onValue,set,push,get}from"https://www.gstatic.com/firebas
 import{getAuth,onAuthStateChanged,signInWithEmailAndPassword,signOut,createUserWithEmailAndPassword}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
 const config={apiKey:"AIzaSyBhlLLm1Vvl3U3JYFZ8rzJJW4pimYDQEEU",authDomain:"dedieno-demo.firebaseapp.com",databaseURL:"https://dedieno-demo-default-rtdb.europe-west1.firebasedatabase.app",projectId:"dedieno-demo"};
-const app=initializeApp(config);
-const mgmtApp=initializeApp(config,'mgmt'); // ✅ App secondaire isolée pour création
-const db=getDatabase(app),auth=getAuth(app),mgmtAuth=getAuth(mgmtApp);
+const app=initializeApp(config), mgmtApp=initializeApp(config,'mgmt');
+const db=getDatabase(app), auth=getAuth(app), mgmtAuth=getAuth(mgmtApp);
 
-let map=null,mkrs={},agentsCache={},alertsCache={};
+let map=null,mkrs={},agentsCache={},alertsCache={},playedAlerts=new Set();
+const alarmSound = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
+window.testSound=()=>{alarmSound.play().catch(e=>alert("🔊 Cliquez une fois sur la page pour autoriser le son."));};
+
 function showView(n){document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));const el=document.getElementById('view-'+n);if(el)el.classList.add('active');}
 window.switchTab=t=>{document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));document.getElementById('tab-'+t).classList.add('active');document.querySelectorAll('.tab')[t==='manual'?0:1].classList.add('active');};
-window.copyCred=()=>{navigator.clipboard.writeText(document.getElementById('cred-text').innerText).then(()=>alert('✅ Copié !'));};
+window.copyCred=()=>navigator.clipboard.writeText(document.getElementById('cred-text').innerText).then(()=>alert('✅ Copié !'));
 window.downloadTemplate=()=>{const a=document.createElement('a');a.href='data:text/csv;charset=utf-8,email,password,name,role,site\nagt003@millesservices.tg,MilS2026!,Kofi Amed,agent,Lomé-Centre';a.download='modele_agents.csv';a.click();};
 
 onAuthStateChanged(auth, async u => {
@@ -117,7 +120,6 @@ onAuthStateChanged(auth, async u => {
   if(isSup) initSup(); else initAg();
 });
 
-// 🔑 LOGIN FLEXIBLE
 document.getElementById('btn-login')?.addEventListener('click', async()=>{
   let rawId=document.getElementById('login-id').value.trim();
   const p=document.getElementById('login-pass').value, err=document.getElementById('login-err');
@@ -130,7 +132,6 @@ document.getElementById('btn-login')?.addEventListener('click', async()=>{
 document.querySelectorAll('#btn-logout,#btn-logout-ag').forEach(b=>b.addEventListener('click',()=>signOut(auth)));
 document.getElementById('btn-manage')?.addEventListener('click',()=>document.getElementById('modal-manage').classList.add('active'));
 
-// 👥 CRÉATION ISOLÉE (Ne touche PAS à la session superviseur)
 window.createManual=async()=>{
   const email=document.getElementById('m-email').value.trim(), pass=document.getElementById('m-pass').value, name=document.getElementById('m-name').value.trim(), role=document.getElementById('m-role').value, site=document.getElementById('m-site').value;
   const credBox=document.getElementById('cred-display'); credBox.style.display='none';
@@ -140,12 +141,10 @@ window.createManual=async()=>{
     const cred=await createUserWithEmailAndPassword(mgmtAuth,fullEmail,pass);
     await set(ref(db,`users/${cred.user.uid}`),{role,name,site,createdAt:Date.now()});
     document.getElementById('cred-text').innerHTML=`👤 Email: <b>${fullEmail}</b><br>🔑 MDP: <b>${pass}</b><br>📛 Nom: ${name}<br>🎭 Rôle: ${role}`;
-    credBox.style.display='block';
-    document.getElementById('m-email').value='';document.getElementById('m-pass').value='';
+    credBox.style.display='block'; document.getElementById('m-email').value='';document.getElementById('m-pass').value='';
   }catch(e){alert('❌ Erreur: '+e.message);}
 };
 
-// 📥 IMPORT CSV
 window.processCSV=async(input)=>{
   const file=input.files[0]; if(!file)return;
   const status=document.getElementById('csv-status'); status.style.display='block'; status.className='status-box'; status.textContent='📖 Lecture...';
@@ -166,10 +165,8 @@ window.processCSV=async(input)=>{
         ok++; await new Promise(r=>setTimeout(r,150));
       }catch(e){err++;msg.push(`Ligne ${i+1}: ${e.message}`);}
     }
-    status.className='status-box '+(err===0?'success':'error');
-    status.innerHTML=`✅ ${ok} créés | ❌ ${err} erreurs`;
-  };
-  reader.readAsText(file);
+    status.className='status-box '+(err===0?'success':'error'); status.innerHTML=`✅ ${ok} créés | ❌ ${err} erreurs`;
+  }; reader.readAsText(file);
 };
 
 function initSup(){
@@ -182,15 +179,20 @@ function initSup(){
     Object.entries(agentsCache).forEach(([id,x])=>{
       const c=document.createElement('div');c.className='agent-card';c.innerHTML='<b>'+(x.name||'?')+'</b> <span style="color:'+(x.status==='online'?'#059669':'#64748b')+'">● '+(x.status||'off')+'</span>';
       c.onclick=()=>{if(mkrs[id]&&x.lat&&map)map.setView([x.lat,x.lng],16);};l.appendChild(c);
-      if(x.lat&&x.lng&&map){const col=x.status==='online'?'#059669':'#94a3b8';
-        if(!mkrs[id])mkrs[id]=L.marker([x.lat,x.lng],{icon:L.divIcon({html:'<div style="background:'+col+';width:12px;height:12px;border-radius:50%;border:3px solid #fff"></div>',iconSize:[18,18]})}).addTo(map);
-        else mkrs[id].setLatLng([x.lat,x.lng]);}
+      if(x.lat&&x.lng&&map){
+        const isOnline=x.status==='online', col=isOnline?'#059669':'#94a3b8';
+        const arrow=isOnline?'<div style="position:absolute;top:-8px;left:50%;transform:translateX(-50%);color:'+col+';font-size:9px;animation:bounce 1s infinite">▲ LIVE</div>':'';
+        const html='<div style="position:relative">'+arrow+'<div style="background:'+col+';width:16px;height:16px;border-radius:50%;border:3px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.3)"></div></div>';
+        if(!mkrs[id])mkrs[id]=L.marker([x.lat,x.lng],{icon:L.divIcon({className:'',html,iconSize:[24,24],iconAnchor:[12,12]})}).addTo(map).bindPopup('<b>'+x.name+'</b><br>📍 '+x.site+'<br>'+(x.accuracy?'🎯 ±'+Math.round(x.accuracy)+'m':''));
+        else mkrs[id].setLatLng([x.lat,x.lng]);
+      }
     });
   });
   onValue(ref(db,'alerts'),s=>{
     alertsCache=s.val()||{};const sos=document.getElementById('sup-sos');
     sos.innerHTML=Object.keys(alertsCache).length?'':'<div style="padding:8px;color:#64748b">✅ Aucune alerte</div>';
     Object.values(alertsCache).sort((a,b)=>(b.timestamp||0)-(a.timestamp||0)).forEach(a=>{
+      if(a.id && !playedAlerts.has(a.id)){alarmSound.play().catch(()=>{});playedAlerts.add(a.id);}
       const time=a.timestamp?new Date(a.timestamp).toLocaleTimeString('fr-FR'):'--:--';
       sos.prepend(`<div class="sos-alert"><div class="sos-header"><span class="sos-site">🚨 ${a.site||'Site'}</span><span class="sos-time">${time}</span></div><div class="sos-agent">👤 ${a.agentId||'Agent'}</div><div class="sos-actions"><button class="btn-resolved" onclick="this.parentElement.parentElement.style.opacity='0.4';this.textContent='✅ Résolu'">Résolu</button></div></div>`);
     });
@@ -204,7 +206,7 @@ document.getElementById('btn-report')?.addEventListener('click',()=>{
   document.getElementById('modal-report').classList.add('active');
 });
 
-let agId=null,agRun=false,agInterval=null;
+let agId=null,agRun=false,agInterval=null,sosCooldown=false;
 function initAg(){}
 document.getElementById('btn-gps')?.addEventListener('click',async()=>{
   const n=document.getElementById('ag-name').value.trim(), s=document.getElementById('ag-site').value, st=document.getElementById('ag-status');
@@ -213,5 +215,14 @@ document.getElementById('btn-gps')?.addEventListener('click',async()=>{
   if(agInterval)clearInterval(agInterval);
   agInterval=setInterval(async()=>{if(!agRun)return;let la,lo,acc;try{const p=await new Promise((r,j)=>navigator.geolocation.getCurrentPosition(r,j,{enableHighAccuracy:true,timeout:8000}));la=p.coords.latitude;lo=p.coords.longitude;acc=p.coords.accuracy;}catch{la=6.1256+(Math.random()-.5)*.002;lo=1.2244+(Math.random()-.5)*.002;acc=15;}await set(ref(db,'agents/'+agId),{name:n,site:s,status:'online',lat:la,lng:lo,accuracy:acc,lastPing:Date.now()});st.textContent=`✅ GPS actif | ${la.toFixed(5)}, ${lo.toFixed(5)}`;},10000);
 });
-document.getElementById('btn-sos')?.addEventListener('click',async()=>{if(!agId)return alert('⚠️ Active GPS');await push(ref(db,'alerts'),{agentId:agId,site:document.getElementById('ag-site').value,timestamp:Date.now()});document.getElementById('ag-status').textContent='🚨 SOS ENVOYÉ !';setTimeout(()=>{if(document.getElementById('ag-status'))document.getElementById('ag-status').textContent='✅ GPS actif';},5000);});
+document.getElementById('btn-sos')?.addEventListener('click',async()=>{
+  const btn=document.getElementById('btn-sos');
+  if(sosCooldown||!agId)return alert('⚠️ Attends 5s ou active le GPS');
+  sosCooldown=true; btn.disabled=true; btn.textContent='🚨 ENVOI...';
+  try{
+    await push(ref(db,'alerts'),{agentId:agId,site:document.getElementById('ag-site').value,timestamp:Date.now(),id:'sos_'+Date.now()});
+    document.getElementById('ag-status').textContent='🚨 SOS ENVOYÉ ! Superviseur alerté.';
+    setTimeout(()=>{btn.disabled=false;btn.textContent='🚨 SOS';sosCooldown=false;if(document.getElementById('ag-status'))document.getElementById('ag-status').textContent='✅ GPS actif';},5000);
+  }catch(e){btn.disabled=false;btn.textContent='🚨 SOS';sosCooldown=false;alert('❌ Erreur réseau: '+e.message);}
+});
 </script></body></html>
